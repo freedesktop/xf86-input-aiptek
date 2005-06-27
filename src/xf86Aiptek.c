@@ -104,9 +104,6 @@ static const char identification[] = "$Identification: 0 $";
 static InputDriverPtr aiptekDrv;
 static int debug_level = INI_DEBUG_LEVEL;
 
-#ifdef XFree86LOADER
-static
-#endif
 _X_EXPORT InputDriverRec AIPTEK =
 {
     1,                  /* driver version */
