@@ -98,6 +98,11 @@
  *      device as "zzz", 
  *
  */
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "xf86Aiptek.h"
 
 static const char identification[] = "$Identification: 0 $";
