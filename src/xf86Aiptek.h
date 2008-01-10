@@ -66,8 +66,6 @@
 #include <misc.h>
 #include <xf86.h>
 
-#define NEED_XF86_TYPES
-
 #if !defined(DGUX)
 #   include <xisb.h>
 #endif
