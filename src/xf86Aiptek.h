@@ -98,6 +98,12 @@
 #define XI_CURSOR           "CURSOR"    /* X device name for the cursor */
 #define XI_ERASER           "ERASER"    /* X device name for the eraser */
 
+/***********************************************************************
+ * We ship the proximity bit through EV_MISC, ORed with information
+ * as to whether report came from the stylus or tablet mouse.
+ */
+#define PROXIMITY(flags)            ((flags) & 0x0F)
+
 /* macro from counts/inch to counts/meter */
 #define LPI2CPM(res)    (res * 1000 / 25.4)
 

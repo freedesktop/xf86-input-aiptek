@@ -4,6 +4,24 @@
  * This driver assumes Linux USB/HID support, available for USB devices.
  * 
  * Version 0.0, 1-Jan-2003, Bryan W. Headley
+ *
+ * Version 1.0 10-jan-2008, Rene van Paassen
+ *  * This version is based on the Xorg driver 1.0.1 version, with 
+ *    fixes based on the version developed at aiptektablet.sourceforge.net
+ *    fixes include - correction of the button status calculation
+ *                    (buttons were never released) 
+ *                  - use stylus as default, because reading the
+ *                    tablet before X start gives no hint as to what device
+ *                    it is producing
+ *                  - correction of the proximity bit detection
+ *                  - although tablet may produce relative (x, y), the z and 
+ *                    tilt values are always absolute, corrected that
+ *                  - relative x and y may be negative sometimes! removed 
+ *                    clipping there
+ *                  - filtering out events only if ALL values are equal to 
+ *                    the, previous not when only one or more is equal + 
+ *                    combined filtering with threshold.
+ *                  
  * 
  * Copyright 2003 by Bryan W. Headley. <bwheadley@earthlink.net>
  *
@@ -203,11 +221,20 @@ xf86AiptekConvert(LocalDevicePtr local,
     AiptekDevicePtr device = (AiptekDevicePtr) local->private;
     int  xSize, ySize;
     int  width, height;
+    ScreenPtr pScreen = miPointerCurrentScreen();
 
     DBG(6, ErrorF("xf86AiptekConvert\n"));
     xf86Msg(X_CONFIG, " xf86AiptekConvert(), with: first=%d, num=%d, v0=%d, "
             "v1=%d, v2=%d, v3=%d,, v4=%d, v5=%d, x=%d, y=%d\n",
             first, num, v0, v1, v2, v3, v4, v5, *x, *y);
+
+    /* Change the screen number if it differs from that which
+     * the pointer is currently on
+     */
+    if (pScreen->myNum != device->screenNo)
+    {
+        device->screenNo = pScreen->myNum;
+    }
 
     if (first != 0 || num == 1)
     {
@@ -333,46 +360,54 @@ xf86AiptekSendEvents(LocalDevicePtr local, int r_z)
     {
         x = common->currentValues.x;
         y = common->currentValues.y;
-        z = r_z;
-        xTilt = common->currentValues.xTilt;
-        yTilt = common->currentValues.yTilt;
+
+        /* Translate coordinates according to Top and Bottom points.
+         */
+        if (x > device->xBottom) {
+            x = device->xBottom;
+        }
+
+        if (y > device->yBottom) {
+            y = device->yBottom;
+        }
+
+	if (device->xTop > 0) {
+	    DBG(10, ErrorF("Adjusting x, with xTop=%d\n", device->xTop));
+	    x -= device->xTop;
+	}
+
+	if (device->yTop > 0) {
+	    DBG(10, ErrorF("Adjusting y, with yTop=%d\n", device->yTop));
+	    y -= device->yTop;
+	}
+
+	if (x < 0) {
+	    x = 0;
+	}
+	if (y < 0) {
+	    y = 0;
+	}
+
     }
     else
     {
-        x = common->currentValues.x - common->previousValues.x;
-        y = common->currentValues.y - common->previousValues.y;
-        z = r_z - common->previousValues.z;
-        xTilt = common->currentValues.xTilt - common->previousValues.xTilt;
-        yTilt = common->currentValues.yTilt - common->previousValues.yTilt;
+        if (common->previousValues.proximity != 0)
+        {
+            x = common->currentValues.x - common->previousValues.x;
+            y = common->currentValues.y - common->previousValues.y;
+        }
+        else
+        {
+            x = 0;
+            y = 0;
+        }
     }
 
-    /* Translate coordinates according to Top and Bottom points.
-     */
-    if (x > device->xBottom) {
-        x = device->xBottom;
-    }
+    z = r_z;
+    xTilt = common->currentValues.xTilt;
+    yTilt = common->currentValues.yTilt;
 
-    if (y > device->yBottom) {
-        y = device->yBottom;
-    }
-
-    if (device->xTop > 0) {
-        DBG(10, ErrorF("Adjusting x, with xTop=%d\n", device->xTop));
-        x -= device->xTop;
-    }
-
-    if (device->yTop > 0) {
-        DBG(10, ErrorF("Adjusting y, with yTop=%d\n", device->yTop));
-        y -= device->yTop;
-    }
-
-    if (x < 0) {
-        x = 0;
-    }
-    if (y < 0) {
-        y = 0;
-    }
-
+    
     /* Deal with pressure min..max, which differs from threshold. */
     if (z < device->zMin) {
         z = 0;
@@ -594,7 +629,7 @@ xf86AiptekHIDReadInput(LocalDevicePtr local)
                          */
                         ++eventsInMessage;
                         common->currentValues.proximity = 
-                            (event->value > 0 ? 1 : 0);
+                            PROXIMITY(event->value) ? 1 : 0;
                     }
                     break;
                 }
@@ -649,7 +684,7 @@ xf86AiptekHIDReadInput(LocalDevicePtr local)
                          */
                         ++eventsInMessage;
                         common->currentValues.proximity = 
-                            (event->value > 0 ? 1 : 0);
+                            PROXIMITY (event->value) ? 1 : 0;
                     }
                     break;
                 }
@@ -711,24 +746,36 @@ xf86AiptekHIDReadInput(LocalDevicePtr local)
                     case BTN_TOUCH:
                     {
                         ++eventsInMessage;
-                        common->currentValues.button |= 
-                            (event->value > 0 ? 1 : 0) * BUTTONS_EVENT_TOUCH;
+                        if (event->value)
+                            common->currentValues.button |= 
+			        BUTTONS_EVENT_TOUCH;
+			else
+			    common->currentValues.button &= 
+			        ~BUTTONS_EVENT_TOUCH;
                     }
                     break;
 
                     case BTN_STYLUS:
                     {
                         ++eventsInMessage;
-                        common->currentValues.button |= 
-                            (event->value > 0 ? 1 : 0) * BUTTONS_EVENT_STYLUS;
+                        if (event->value)
+                            common->currentValues.button |= 
+			        BUTTONS_EVENT_STYLUS;
+			else
+			    common->currentValues.button &= 
+			        ~BUTTONS_EVENT_STYLUS;
                     }
                     break;
 
                     case BTN_STYLUS2:
                     {
                         ++eventsInMessage;
-                        common->currentValues.button |= 
-                            (event->value > 0 ? 1 : 0) * BUTTONS_EVENT_STYLUS2;
+                        if (event->value)
+                            common->currentValues.button |= 
+			        BUTTONS_EVENT_STYLUS2;
+			else
+			    common->currentValues.button &= 
+			        ~BUTTONS_EVENT_STYLUS2;
                     }
                     break;
 
@@ -742,40 +789,60 @@ xf86AiptekHIDReadInput(LocalDevicePtr local)
                     case BTN_LEFT:
                     {
                         ++eventsInMessage;
-                        common->currentValues.button |= 
-                            (event->value > 0 ? 1 : 0) * BUTTONS_EVENT_MOUSE_LEFT;
+                        if (event->value)
+                            common->currentValues.button |= 
+			        BUTTONS_EVENT_MOUSE_LEFT;
+			else
+			    common->currentValues.button &= 
+			        ~BUTTONS_EVENT_MOUSE_LEFT;
                     }
                     break;
 
                     case BTN_MIDDLE:
                     {
                         ++eventsInMessage;
-                        common->currentValues.button |= 
-                            (event->value > 0 ? 1 : 0) * BUTTONS_EVENT_MOUSE_MIDDLE;
+                        if (event->value)
+                            common->currentValues.button |= 
+			        BUTTONS_EVENT_MOUSE_MIDDLE;
+			else
+			    common->currentValues.button &= 
+			        ~BUTTONS_EVENT_MOUSE_MIDDLE;
                     }
                     break;
 
                     case BTN_RIGHT:
                     {
                         ++eventsInMessage;
-                        common->currentValues.button |= 
-                            (event->value > 0 ? 1 : 0) * BUTTONS_EVENT_MOUSE_RIGHT;
+                        if (event->value)
+                            common->currentValues.button |= 
+			        BUTTONS_EVENT_MOUSE_RIGHT;
+			else
+			    common->currentValues.button &= 
+			        ~BUTTONS_EVENT_MOUSE_RIGHT;
                     }
                     break;
 
                     case BTN_SIDE:
                     {
                         ++eventsInMessage;
-                        common->currentValues.button |= 
-                            (event->value > 0 ? 1 : 0) * BUTTONS_EVENT_SIDE_BTN;
+                        if (event->value)
+                            common->currentValues.button |= 
+			        BUTTONS_EVENT_SIDE_BTN;
+			else
+			    common->currentValues.button &= 
+			        ~BUTTONS_EVENT_SIDE_BTN;
                     }
                     break;
 
                     case BTN_EXTRA:
                     {
                         ++eventsInMessage;
-                        common->currentValues.button |= 
-                            (event->value > 0 ? 1 : 0) * BUTTONS_EVENT_EXTRA_BTN;
+                        if (event->value)
+                            common->currentValues.button |= 
+			        BUTTONS_EVENT_EXTRA_BTN;
+			else
+			    common->currentValues.button &= 
+			        ~BUTTONS_EVENT_EXTRA_BTN;
                     }
                     break;
 
@@ -842,41 +909,24 @@ xf86AiptekHIDReadInput(LocalDevicePtr local)
          * Also, we only do the comparison IFF a threshold has been set
          * for that given dimension.
          */
-        if ((device->xThreshold > 1 && 
-                ABS(common->currentValues.x - common->previousValues.x)
-                    <= device->xThreshold) ||
-            (device->yThreshold > 1 &&
-                ABS(common->currentValues.y - common->previousValues.y)
-                    <= device->yThreshold) ||
-            (device->zThreshold > 1 &&
-                ABS(common->currentValues.z - common->previousValues.z)
-                    <= device->zThreshold) ||
-            (device->xTiltThreshold > 1 &&
-                ABS(common->currentValues.xTilt - common->previousValues.xTilt)
-                    <= device->xTiltThreshold) ||
-            (device->yTiltThreshold > 1 &&
-                ABS(common->currentValues.yTilt - common->previousValues.yTilt)
-                    <= device->yTiltThreshold))
+        if (ABS(common->currentValues.x - common->previousValues.x)
+                    <= device->xThreshold &&
+            ABS(common->currentValues.y - common->previousValues.y)
+                    <= device->yThreshold &&
+            ABS(common->currentValues.z - common->previousValues.z)
+                    <= device->zThreshold &&
+            ABS(common->currentValues.xTilt - common->previousValues.xTilt)
+                    <= device->xTiltThreshold &&
+            ABS(common->currentValues.yTilt - common->previousValues.yTilt)
+                    <= device->yTiltThreshold &&
+	    common->currentValues.proximity == 
+                    common->previousValues.proximity &&
+            common->currentValues.button ==
+                    common->previousValues.button &&
+            common->currentValues.macroKey ==
+                    common->previousValues.macroKey)
         {
             DBG(10, ErrorF("Event Filtered Out by Thresholds\n"));
-            continue;
-        }
-
-        /*
-         * If this report somehow has exactly the same readings as the
-         * previous report for all dimensions, throw the report out.
-         */
-        if ((common->currentValues.x == common->previousValues.x) &&
-            (common->currentValues.y == common->previousValues.y) &&
-            (common->currentValues.z == common->previousValues.z) &&
-            (common->currentValues.proximity == 
-                                         common->previousValues.proximity) &&
-            (common->currentValues.button == 
-                                         common->previousValues.button) &&
-            (common->currentValues.macroKey ==
-                                         common->previousValues.macroKey))
-        {
-            DBG(10, ErrorF("Event Filtered Out\n"));
             continue;
         }
 
@@ -1809,8 +1859,10 @@ xf86AiptekAllocate(char* name,
     device->common =        common;   /* Common info pointer */
 
     /* Record of the event currently being read of the queue */
-    common->currentValues.eventType = 0;   /* Device event is for, e.g., */
-                                            /* STYLUS, RUBBER, CURSOR */
+    common->currentValues.eventType = STYLUS_ID;   
+                                      /* Device event is for, e.g., */
+                                      /* STYLUS, RUBBER, CURSOR */
+                                      /* Starting with stylus as default */
     common->currentValues.x         = 0;   /* X coordinate */
     common->currentValues.y         = 0;   /* Y coordinate */
     common->currentValues.z         = 0;   /* Z (pressure) */
