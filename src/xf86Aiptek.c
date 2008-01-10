@@ -339,7 +339,7 @@ xf86AiptekSendEvents(LocalDevicePtr local, int r_z)
     AiptekDevicePtr device = (AiptekDevicePtr) local->private;
     AiptekCommonPtr common = device->common;
 
-    int bCorePointer, bAbsolute;
+    int bAbsolute;
     int x, y, z, xTilt, yTilt;
 
     if ((DEVICE_ID(device->flags) != common->currentValues.eventType))
@@ -350,7 +350,6 @@ xf86AiptekSendEvents(LocalDevicePtr local, int r_z)
     }
 
     bAbsolute    = (device->flags & ABSOLUTE_FLAG);
-    bCorePointer = xf86IsCorePointer(local->dev);
 
     /*
      * Normalize X and Y coordinates. This includes dealing
@@ -466,11 +465,8 @@ xf86AiptekSendEvents(LocalDevicePtr local, int r_z)
     {
         if (!common->previousValues.proximity)
         {
-            if (!bCorePointer)
-            {
-                xf86PostProximityEvent(local->dev, 1, 0, 5,
+            xf86PostProximityEvent(local->dev, 1, 0, 5,
                     x, y, z, xTilt, yTilt);
-            }
         }
 
         if ((bAbsolute &&
@@ -504,13 +500,10 @@ xf86AiptekSendEvents(LocalDevicePtr local, int r_z)
     }
     else
     {
-        if (!bCorePointer)
+        if (common->previousValues.proximity)
         {
-            if (common->previousValues.proximity)
-            {
-                xf86PostProximityEvent(local->dev, 0, 0, 5, x, y, z,
-                        xTilt, yTilt);
-            }
+            xf86PostProximityEvent(local->dev, 0, 0, 5, x, y, z,
+                    xTilt, yTilt);
         }
         common->previousValues.proximity = 0;
     }
