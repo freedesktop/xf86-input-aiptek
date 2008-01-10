@@ -221,7 +221,7 @@ xf86AiptekConvert(LocalDevicePtr local,
     AiptekDevicePtr device = (AiptekDevicePtr) local->private;
     int  xSize, ySize;
     int  width, height;
-    ScreenPtr pScreen = miPointerCurrentScreen();
+    ScreenPtr pScreen = miPointerGetScreen(local->dev);
 
     DBG(6, ErrorF("xf86AiptekConvert\n"));
     xf86Msg(X_CONFIG, " xf86AiptekConvert(), with: first=%d, num=%d, v0=%d, "
