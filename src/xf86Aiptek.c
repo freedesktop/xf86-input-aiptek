@@ -339,7 +339,7 @@ xf86AiptekSendEvents(LocalDevicePtr local, int r_z)
     AiptekDevicePtr device = (AiptekDevicePtr) local->private;
     AiptekCommonPtr common = device->common;
 
-    int bCorePointer, bAbsolute;
+    int bCorePointer = FALSE, bAbsolute;
     int x, y, z, xTilt, yTilt;
 
     if ((DEVICE_ID(device->flags) != common->currentValues.eventType))
@@ -350,7 +350,9 @@ xf86AiptekSendEvents(LocalDevicePtr local, int r_z)
     }
 
     bAbsolute    = (device->flags & ABSOLUTE_FLAG);
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
     bCorePointer = xf86IsCorePointer(local->dev);
+#endif
 
     /*
      * Normalize X and Y coordinates. This includes dealing
