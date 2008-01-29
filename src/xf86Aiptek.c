@@ -221,7 +221,11 @@ xf86AiptekConvert(LocalDevicePtr local,
     AiptekDevicePtr device = (AiptekDevicePtr) local->private;
     int  xSize, ySize;
     int  width, height;
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
+    ScreenPtr pScreen = miPointerCurrentScreen();
+#else
     ScreenPtr pScreen = miPointerGetScreen(local->dev);
+#endif
 
     DBG(15, ErrorF(" xf86AiptekConvert(), with: first=%d, num=%d, v0=%d, "
 		   "v1=%d, v2=%d, v3=%d,, v4=%d, v5=%d, x=%d, y=%d\n",
