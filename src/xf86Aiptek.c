@@ -1642,12 +1642,11 @@ xf86AiptekProc(DeviceIntPtr pAiptek, int requestCode)
 
         case DEVICE_OFF:
         {
-            DBG(1, ErrorF("xf86AiptekProc request=%s\n", 
-                            (requestCode == DEVICE_CLOSE) ? "CLOSE" : "OFF"));
+	    DBG(1, ErrorF("xf86AiptekProc request=OFF\n"));
             if (local->fd >= 0)
             {
-                xf86AiptekClose(local);
                 xf86RemoveEnabledDevice(local);
+                xf86AiptekClose(local);
             }
             pAiptek->public.on = FALSE;
         }
@@ -1655,8 +1654,7 @@ xf86AiptekProc(DeviceIntPtr pAiptek, int requestCode)
 
         case DEVICE_CLOSE:
         {
-            DBG(1, ErrorF("xf86AiptekProc request=%s\n", 
-                           (requestCode == DEVICE_CLOSE) ? "CLOSE" : "OFF"));
+  	    DBG(1, ErrorF("xf86AiptekProc request=CLOSE\n"));
             xf86AiptekClose(local);
         }
         break;
