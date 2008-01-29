@@ -223,10 +223,9 @@ xf86AiptekConvert(LocalDevicePtr local,
     int  width, height;
     ScreenPtr pScreen = miPointerGetScreen(local->dev);
 
-    DBG(6, ErrorF("xf86AiptekConvert\n"));
-    xf86Msg(X_CONFIG, " xf86AiptekConvert(), with: first=%d, num=%d, v0=%d, "
-            "v1=%d, v2=%d, v3=%d,, v4=%d, v5=%d, x=%d, y=%d\n",
-            first, num, v0, v1, v2, v3, v4, v5, *x, *y);
+    DBG(15, ErrorF(" xf86AiptekConvert(), with: first=%d, num=%d, v0=%d, "
+		   "v1=%d, v2=%d, v3=%d,, v4=%d, v5=%d, x=%d, y=%d\n",
+		   first, num, v0, v1, v2, v3, v4, v5, *x, *y));
 
     /* Change the screen number if it differs from that which
      * the pointer is currently on
@@ -283,8 +282,8 @@ xf86AiptekConvert(LocalDevicePtr local,
     {
         xf86XInputSetScreen(local, device->screenNo, *x, *y);
     }
-    xf86Msg(X_CONFIG, ": xf86AiptekConvert() exits, with: x=%d, y=%d\n",
-            *x, *y);
+    DBG(15, ErrorF("xf86AiptekConvert() exits, with: x=%d, y=%d\n",
+		   *x, *y));
 
     return TRUE;
 }
@@ -302,9 +301,9 @@ xf86AiptekReverseConvert(LocalDevicePtr local,
     AiptekDevicePtr device = (AiptekDevicePtr) local->private;
     int    xSize, ySize;
 
-    xf86Msg(X_CONFIG, ": xf86AiptekReverseConvert(), with: x=%d, y=%d, "
-            "valuators[0]=%d, valuators[1]=%d\n",
-            x, y, valuators[0], valuators[1] );
+    DBG(15,  ErrorF("xf86AiptekReverseConvert(), with: x=%d, y=%d, "
+		    "valuators[0]=%d, valuators[1]=%d\n",
+		    x, y, valuators[0], valuators[1] ));
 
     /*
      * Adjust by tablet ratio
@@ -315,16 +314,16 @@ xf86AiptekReverseConvert(LocalDevicePtr local,
     valuators[0] = (x*xSize) / screenInfo.screens[device->screenNo]->width;
     valuators[1] = (y*ySize) / screenInfo.screens[device->screenNo]->height;
 
-    DBG(6, ErrorF("converted x,y (%d, %d) to (%d, %d)\n",
+    DBG(15, ErrorF("converted x,y (%d, %d) to (%d, %d)\n",
                     x, y, valuators[0], valuators[1] ));
 
     if (device->screenNo != 0)
     {
         xf86XInputSetScreen(local,device->screenNo,valuators[0], valuators[1]);
     }
-    xf86Msg(X_CONFIG, ": xf86AiptekReverseConvert() exits, with: "
-            "valuators[0]=%d, valuators[1]=%d\n",
-            valuators[0], valuators[1] );
+    DBG(15, ErrorF(": xf86AiptekReverseConvert() exits, with: "
+		   "valuators[0]=%d, valuators[1]=%d\n",
+		   valuators[0], valuators[1] ));
 
     return TRUE;
 }
