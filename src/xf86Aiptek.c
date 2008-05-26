@@ -1611,7 +1611,9 @@ xf86AiptekProc(DeviceIntPtr pAiptek, int requestCode)
 
             if (InitValuatorClassDeviceStruct(pAiptek,
                    numAxes,
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 3
                    xf86GetMotionEvents,
+#endif
                    local->history_size,
                    ((device->flags & ABSOLUTE_FLAG) 
                         ? Absolute : Relative) | OutOfProximity ) == FALSE)
