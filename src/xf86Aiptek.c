@@ -2043,6 +2043,7 @@ xf86AiptekUninit(InputDriverPtr    drv,
         xfree(device->common);
     }
     xfree (device);
+    local->private = NULL;
     xf86DeleteInput(local, 0);
 }
 
