@@ -148,25 +148,6 @@ _X_EXPORT InputDriverRec AIPTEK =
 };
 
 /*
- * Function/Macro keys variables.
- *
- * This is a list of X keystrokes the macro keys can send.
- */
-static KeySym aiptek_map[] =
-{
-    /* 0x00 .. 0x07 */
-    NoSymbol,NoSymbol,NoSymbol,NoSymbol,NoSymbol,NoSymbol,NoSymbol,NoSymbol,
-    /* 0x08 .. 0x0f */
-    XK_F1,  XK_F2,  XK_F3,  XK_F4,  XK_F5,  XK_F6,  XK_F7,  XK_F8,
-    /* 0x10 .. 0x17 */
-    XK_F9,  XK_F10, XK_F11, XK_F12, XK_F13, XK_F14, XK_F15, XK_F16,
-    /* 0x18 .. 0x1f */
-    XK_F17, XK_F18, XK_F19, XK_F20, XK_F21, XK_F22, XK_F23, XK_F24,
-    /* 0x20 .. 0x27 */
-    XK_F25, XK_F26, XK_F27, XK_F28, XK_F29, XK_F30, XK_F31, XK_F32
-};
-
-/*
  * This is the map of Linux Event Input system keystrokes sent for
  * the macro keys. There are discrepancies in the mappings, so for example,
  * if we wanted to implement full macro key-to-string conversion in the
@@ -187,12 +168,33 @@ static int linux_inputDevice_keyMap[] =
     KEY_OPEN, KEY_PASTE
 };
 
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 7
+/*
+ * Function/Macro keys variables.
+ *
+ * This is a list of X keystrokes the macro keys can send.
+ */
+static KeySym aiptek_map[] =
+{
+    /* 0x00 .. 0x07 */
+    NoSymbol,NoSymbol,NoSymbol,NoSymbol,NoSymbol,NoSymbol,NoSymbol,NoSymbol,
+    /* 0x08 .. 0x0f */
+    XK_F1,  XK_F2,  XK_F3,  XK_F4,  XK_F5,  XK_F6,  XK_F7,  XK_F8,
+    /* 0x10 .. 0x17 */
+    XK_F9,  XK_F10, XK_F11, XK_F12, XK_F13, XK_F14, XK_F15, XK_F16,
+    /* 0x18 .. 0x1f */
+    XK_F17, XK_F18, XK_F19, XK_F20, XK_F21, XK_F22, XK_F23, XK_F24,
+    /* 0x20 .. 0x27 */
+    XK_F25, XK_F26, XK_F27, XK_F28, XK_F29, XK_F30, XK_F31, XK_F32
+};
+
 /* minKeyCode = 8 because this is the min legal key code */
 static KeySymsRec keysyms =
 {
   /* map        minKeyCode  maxKC   width */
   aiptek_map,   8,          0x27,   1
 };
+#endif
 
 static const char *default_options[] =
 {
@@ -1640,11 +1642,13 @@ xf86AiptekProc(DeviceIntPtr pAiptek, int requestCode)
                 return !Success;
             }
 
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 7
             if (InitKeyClassDeviceStruct(pAiptek, &keysyms, NULL) ==FALSE)
             {
                 ErrorF("Unable to init Key Class Device\n");
                 return !Success;
             }
+#endif
 
             /* we don't label the axes here, done later in
              * xf86AiptedOpenDevice */
