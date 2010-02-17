@@ -866,7 +866,7 @@ xf86AiptekHIDReadInput(LocalDevicePtr local)
                     default:
                     {
                         ++eventsInMessage;
-                        common->currentValues.macroKey = event->value;
+                        common->currentValues.macroKey = event->code;
                     }
                     break;
                 }
