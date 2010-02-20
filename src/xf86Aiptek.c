@@ -461,11 +461,11 @@ xf86AiptekSendEvents(LocalDevicePtr local, int r_z)
                  */
 
                 /* Keyboard 'make' (press) event */
-                xf86PostKeyEvent(local->dev, i+7, TRUE,
+                xf86PostKeyEvent(local->dev, i+8, TRUE,
                                  bAbsolute, 0, 5,
                                  x, y, common->currentValues.button, xTilt, yTilt);
                 /* Keyboard 'break' (depress) event */
-                xf86PostKeyEvent(local->dev, i+7, FALSE,
+                xf86PostKeyEvent(local->dev, i+8, FALSE,
                                  bAbsolute, 0, 5,
                                  x, y, common->currentValues.button, xTilt, yTilt);
                 break;
