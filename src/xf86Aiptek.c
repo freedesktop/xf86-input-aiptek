@@ -452,26 +452,26 @@ xf86AiptekSendEvents(LocalDevicePtr local, int r_z)
                  sizeof(linux_inputDevice_keyMap[0]);
              ++i)
         {
-            if (linux_inputDevice_keyMap[0]==common->currentValues.macroKey)
+            if (linux_inputDevice_keyMap[i]==common->currentValues.macroKey)
             {
+                /* First available Keycode begins at 8 => macro+8.
+                 * It's pervasive throughout the Xinput drivers, and
+                 * no, I don't know why they purposively waste the first 8
+                 * positions of the KeySym map...
+                 */
+
+                /* Keyboard 'make' (press) event */
+                xf86PostKeyEvent(local->dev, i+7, TRUE,
+                                 bAbsolute, 0, 5,
+                                 x, y, common->currentValues.button, xTilt, yTilt);
+                /* Keyboard 'break' (depress) event */
+                xf86PostKeyEvent(local->dev, i+7, FALSE,
+                                 bAbsolute, 0, 5,
+                                 x, y, common->currentValues.button, xTilt, yTilt);
                 break;
             }
         }
 
-        /* First available Keycode begins at 8 => macro+7.
-         * It's pervasive throughout the Xinput drivers, and
-         * no, I don't know why they purposively waste the first 8
-         * positions of the KeySym map...
-         */
-
-        /* Keyboard 'make' (press) event */
-        xf86PostKeyEvent(local->dev, i+7, TRUE,
-                         bAbsolute, 0, 5,
-                         x, y, common->currentValues.button, xTilt, yTilt);
-        /* Keyboard 'break' (depress) event */
-        xf86PostKeyEvent(local->dev, i+7, FALSE,
-                         bAbsolute, 0, 5,
-                         x, y, common->currentValues.button, xTilt, yTilt);
     }
 
     /* As the coordinates are ready, we can send events to X */
