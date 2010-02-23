@@ -174,7 +174,7 @@ static int linux_inputDevice_keyMap[] =
  *
  * This is a list of X keystrokes the macro keys can send.
  */
-static KeySym aiptek_map[] =
+static KeySym aiptek_map[256] =
 {
     /* 0x00 .. 0x07 */
     NoSymbol,NoSymbol,NoSymbol,NoSymbol,NoSymbol,NoSymbol,NoSymbol,NoSymbol,
@@ -192,7 +192,7 @@ static KeySym aiptek_map[] =
 static KeySymsRec keysyms =
 {
   /* map        minKeyCode  maxKC   width */
-  aiptek_map,   8,          0x27,   1
+  aiptek_map,   8,          0xff,   1
 };
 #endif
 
