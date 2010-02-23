@@ -1569,6 +1569,23 @@ xf86AiptekOpenDevice(DeviceIntPtr pDriver)
 }
 
 /*
+ * xf86AiptekBellCallback
+ */
+static void
+xf86AiptekBellCallback(int pct, DeviceIntPtr di, pointer ctrl, int x)
+{
+}
+
+/*
+ * xf86AiptekKbdCtrlCallback
+ */
+static void
+xf86AiptekKbdCtrlCallback(DeviceIntPtr di, KeybdCtrl* ctrl)
+{
+}
+
+
+/*
  * xf86AiptekProc
  *
  *  Call dispatcher for this driver.
@@ -1648,6 +1665,15 @@ xf86AiptekProc(DeviceIntPtr pAiptek, int requestCode)
                 ErrorF("Unable to init Key Class Device\n");
                 return !Success;
             }
+
+            if(InitKbdFeedbackClassDeviceStruct(pAiptek,
+                xf86AiptekBellCallback,
+                xf86AiptekKbdCtrlCallback) == FALSE)
+            {
+                ErrorF("Unable to init Keyboard Feedback Class Device\n");
+                return !Success;
+            }
+
 #endif
 
             /* we don't label the axes here, done later in
