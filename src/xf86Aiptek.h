@@ -56,6 +56,7 @@
 #   endif
 #endif
 
+#include <xorg-server.h>
 #include <xorgVersion.h>
 
 #ifndef XFree86LOADER
