@@ -62,6 +62,7 @@ XORG_DRIVER_CHECK_EXT(XINPUT, inputproto)
 PKG_CHECK_MODULES(XORG, [xorg-server >= 1.0.99.901] xproto $REQUIRED_MODULES)
 
 # Checks for libraries.
+AC_CHECK_LIB([m],[sqrt])
 
 # Checks for header files.
 AC_CHECK_HEADERS([linux/input.h])
