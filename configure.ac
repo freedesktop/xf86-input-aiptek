@@ -64,7 +64,7 @@ PKG_CHECK_MODULES(XORG, [xorg-server >= 1.0.99.901] xproto $REQUIRED_MODULES)
 # Checks for libraries.
 
 # Checks for header files.
-AC_HEADER_STDC
+AC_CHECK_HEADERS([linux/input.h])
 
 DRIVER_NAME=aiptek
 AC_SUBST([DRIVER_NAME])

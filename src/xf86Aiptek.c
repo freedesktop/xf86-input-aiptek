@@ -117,10 +117,6 @@
  *
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include "xf86Aiptek.h"
 #include <errno.h>
 #include <string.h>
@@ -2264,7 +2260,7 @@ xf86AiptekInit(InputDriverPtr    drv,
     xf86Msg(X_CONFIG, "%s is in %s mode\n", local->name,
         (device->flags & ABSOLUTE_FLAG) ? "absolute" : "relative");
 
-#ifdef LINUX_INPUT
+#ifdef HAVE_LINUX_INPUT_H
     /* The define-name is accurate; the XFree86 keyword is not. We are
      * reading from a Linux kernel "Input" device. The Input device
      * layer generally supports mice, joysticks, and keyboards. As
