@@ -20,43 +20,31 @@
 #
 # Process this file with autoconf to produce a configure script
 
-AC_PREREQ(2.60)
+AC_PREREQ([2.60])
 AC_INIT([xf86-input-aiptek],
-        1.3.0,
+        [1.3.0],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
-        xf86-input-aiptek)
-
+        [xf86-input-aiptek])
 AC_CONFIG_SRCDIR([Makefile.am])
-AC_CONFIG_AUX_DIR(.)
 AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_AUX_DIR(.)
 
+# Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
 
-# Require xorg-macros: XORG_DEFAULT_OPTIONS
-m4_ifndef([XORG_MACROS_VERSION], 
-          [m4_fatal([must install xorg-macros 1.3 or later before running autoconf/autogen])])
-XORG_MACROS_VERSION(1.3)
-XORG_DEFAULT_OPTIONS
-
-# Checks for programs.
+# Initialize libtool
 AC_DISABLE_STATIC
 AC_PROG_LIBTOOL
 
-AC_ARG_WITH(xorg-module-dir,
-            AC_HELP_STRING([--with-xorg-module-dir=DIR],
-                           [Default xorg module directory [[default=$libdir/xorg/modules]]]),
-            [moduledir="$withval"],
-            [moduledir="$libdir/xorg/modules"])
-inputdir=${moduledir}/input
-AC_SUBST(inputdir)
+# Initialize X.Org macros
+m4_ifndef([XORG_MACROS_VERSION],
+          [m4_fatal([must install xorg-macros 1.4 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.4)
+XORG_DEFAULT_OPTIONS
 
-# Checks for extensions
-XORG_DRIVER_CHECK_EXT(RANDR, randrproto)
-XORG_DRIVER_CHECK_EXT(XINPUT, inputproto)
-
-# Checks for pkg-config packages
-PKG_CHECK_MODULES(XORG, [xorg-server >= 1.0.99.901] xproto $REQUIRED_MODULES)
+# Checks for programs.
+AC_PROG_INSTALL
 
 # Checks for libraries.
 AC_CHECK_LIB([m],[sqrt])
@@ -64,7 +52,26 @@ AC_CHECK_LIB([m],[sqrt])
 # Checks for header files.
 AC_CHECK_HEADERS([linux/input.h])
 
+# Store the list of server defined extensions in REQUIRED_MODULES
+XORG_DRIVER_CHECK_EXT(RANDR, randrproto)
+XORG_DRIVER_CHECK_EXT(XINPUT, inputproto)
+
+# Obtain compiler/linker options from server and required extensions
+PKG_CHECK_MODULES(XORG, [xorg-server >= 1.0.99.901] xproto $REQUIRED_MODULES)
+
+# Define a configure option for an alternate input module directory
+AC_ARG_WITH(xorg-module-dir,
+            AS_HELP_STRING([--with-xorg-module-dir=DIR],
+                           [Default xorg module directory [[default=$libdir/xorg/modules]]]),
+            [moduledir="$withval"],
+            [moduledir="$libdir/xorg/modules"])
+inputdir=${moduledir}/input
+AC_SUBST(inputdir)
+
 DRIVER_NAME=aiptek
 AC_SUBST([DRIVER_NAME])
 
-AC_OUTPUT([Makefile src/Makefile man/Makefile])
+AC_CONFIG_FILES([Makefile
+                 man/Makefile
+                 src/Makefile])
+AC_OUTPUT
