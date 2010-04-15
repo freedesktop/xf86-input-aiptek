@@ -42,8 +42,6 @@ XORG_DEFAULT_OPTIONS
 # Checks for programs.
 AC_DISABLE_STATIC
 AC_PROG_LIBTOOL
-AC_PROG_CC
-
 
 AC_ARG_WITH(xorg-module-dir,
             AC_HELP_STRING([--with-xorg-module-dir=DIR],
