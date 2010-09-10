@@ -1167,7 +1167,7 @@ static int
 xf86AiptekOpenDevice(DeviceIntPtr pDriver)
 {
     InputInfoPtr    pInfo  = (InputInfoPtr)pDriver->public.devicePrivate;
-    AiptekDevicePtr   device = (AiptekDevicePtr)PRIVATE(pDriver);
+    AiptekDevicePtr   device = pInfo->private;
     AiptekCommonPtr   common = device->common;
     double            tabletRatio, screenRatio;
     double            xFactor, yFactor;
@@ -1593,7 +1593,7 @@ xf86AiptekProc(DeviceIntPtr pAiptek, int requestCode)
     int             numButtons = 5;
     int             loop;
     InputInfoPtr  pInfo  = (InputInfoPtr)pAiptek->public.devicePrivate;
-    AiptekDevicePtr device = (AiptekDevicePtr)PRIVATE(pAiptek);
+    AiptekDevicePtr device = pInfo->private;
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
     Atom            btn_labels[numAxes];
     Atom            axes_labels[numButtons];
