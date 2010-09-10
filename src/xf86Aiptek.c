@@ -131,6 +131,18 @@ static const char identification[] = "$Identification: 0 $";
 static InputDriverPtr aiptekDrv;
 static int debug_level = INI_DEBUG_LEVEL;
 
+static const char *default_options[] =
+{
+    "BaudRate",     "9600",
+    "StopBits",     "1",
+    "DataBits",     "8",
+    "Parity",       "None",
+    "VMin",         "1",
+    "Vtime",        "10",
+    "FlowControl",  "Xoff",
+    NULL
+};
+
 _X_EXPORT InputDriverRec AIPTEK =
 {
     1,                  /* driver version */
@@ -190,18 +202,6 @@ static KeySymsRec keysyms =
   aiptek_map,   8,          0xff,   1
 };
 #endif
-
-static const char *default_options[] =
-{
-    "BaudRate",     "9600",
-    "StopBits",     "1",
-    "DataBits",     "8",
-    "Parity",       "None",
-    "VMin",         "1",
-    "Vtime",        "10",
-    "FlowControl",  "Xoff",
-    NULL
-};
 
 /*
  * xf86AiptekConvert
