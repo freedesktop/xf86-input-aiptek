@@ -1681,7 +1681,7 @@ xf86AiptekProc(DeviceIntPtr pAiptek, int requestCode)
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 3
                    xf86GetMotionEvents,
 #endif
-                   pInfo->history_size,
+                   GetMotionHistorySize(),
                    ((device->flags & ABSOLUTE_FLAG) 
                         ? Absolute : Relative) | OutOfProximity ) == FALSE)
             {
@@ -1902,7 +1902,6 @@ xf86AiptekAllocate(char* name,
     pInfo->dev =            NULL;
     pInfo->private =        device;
     pInfo->private_flags =  0;
-    pInfo->history_size  =  0;
 
     device->flags =         flag;       /* various flags (device type, 
                                          * coordinate type */
