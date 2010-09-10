@@ -1852,27 +1852,27 @@ xf86AiptekAllocate(char* name,
 
     DBG(3, ErrorF("xf86AiptekAllocate, with %s and %d\n", name, flag));
 
-    device = (AiptekDevicePtr) xalloc(sizeof(AiptekDeviceRec));
+    device = (AiptekDevicePtr) malloc(sizeof(AiptekDeviceRec));
     if (!device)
     {
         DBG(3, ErrorF("xf86AiptekAllocate failed to allocate 'device'\n"));
         return NULL;
     }
 
-    common = (AiptekCommonPtr) xalloc(sizeof(AiptekCommonRec));
+    common = (AiptekCommonPtr) malloc(sizeof(AiptekCommonRec));
     if (!common)
     {
         DBG(3, ErrorF("xf86AiptekAllocate failed to allocate 'common'\n"));
-        xfree(device);
+        free(device);
         return NULL;
     }
 
-    deviceArray = (LocalDevicePtr*) xalloc(sizeof(LocalDevicePtr));
+    deviceArray = (LocalDevicePtr*) malloc(sizeof(LocalDevicePtr));
     if (!deviceArray)
     {
         DBG(3, ErrorF("xf86AiptekAllocate failed to allocate 'deviceArray'\n"));
-        xfree(device);
-        xfree(common);
+        free(device);
+        free(common);
         return NULL;
     }
 
@@ -1881,9 +1881,9 @@ xf86AiptekAllocate(char* name,
     if (!local)
     {
         DBG(3, ErrorF("xf86AiptekAllocate failed at xf86AllocateInput()\n"));
-        xfree(device);
-        xfree(common);
-        xfree(deviceArray);
+        free(device);
+        free(common);
+        free(deviceArray);
         return NULL;
     }
 
@@ -2066,9 +2066,9 @@ xf86AiptekUninit(InputDriverPtr    drv,
     if (device->common && device->common->xCapacity != -10101)
     {
         device->common->xCapacity = -10101;
-        xfree(device->common);
+        free(device->common);
     }
-    xfree (device);
+    free (device);
     local->private = NULL;
     xf86DeleteInput(local, 0);
 }
@@ -2095,7 +2095,7 @@ xf86AiptekInit(InputDriverPtr    drv,
 
     xf86Msg(X_INFO, "xf86AiptekInit(): begins\n");
 
-    fakeLocal = (LocalDevicePtr) xcalloc(1, sizeof(LocalDeviceRec));
+    fakeLocal = (LocalDevicePtr) calloc(1, sizeof(LocalDeviceRec));
     if (!fakeLocal)
     {
         return NULL;
@@ -2132,7 +2132,7 @@ xf86AiptekInit(InputDriverPtr    drv,
 
     if(!local)
     {
-        xfree(fakeLocal);
+        free(fakeLocal);
         return NULL;
     }
 
@@ -2143,7 +2143,7 @@ xf86AiptekInit(InputDriverPtr    drv,
     local->options      = fakeLocal->options;
     local->conf_idev    = fakeLocal->conf_idev;
     local->name         = dev->identifier;
-    xfree(fakeLocal);
+    free(fakeLocal);
 
 /* Device */
 /* (mandatory) */
@@ -2176,13 +2176,13 @@ xf86AiptekInit(InputDriverPtr    drv,
 
             shared = 1;
 
-            xfree(common->deviceArray);
-            xfree(common);
+            free(common->deviceArray);
+            free(common);
 
             common = device->common =
                 ((AiptekDevicePtr) locals->private)->common;
             common->numDevices++;
-            common->deviceArray = (LocalDevicePtr*)xrealloc(common->deviceArray,
+            common->deviceArray = (LocalDevicePtr*)realloc(common->deviceArray,
                     sizeof(LocalDevicePtr)*common->numDevices);
             common->deviceArray[common->numDevices-1] = local;
             break;
@@ -2517,11 +2517,11 @@ xf86AiptekInit(InputDriverPtr    drv,
 
 SetupProc_fail:
     if (common)
-        xfree(common);
+        free(common);
     if (device)
-        xfree(device);
+        free(device);
     if (local)
-        xfree(local);
+        free(local);
     return NULL;
 }
 
