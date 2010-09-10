@@ -357,17 +357,17 @@ typedef struct _AiptekCommonRec
     unsigned char   data[9];        /* data read on the device */
 
     int             numDevices;     /* number of tablet */
-    LocalDevicePtr* deviceArray;    /* array of tablets sharing the device */
+    InputInfoPtr* deviceArray;    /* array of tablets sharing the device */
 
-    Bool (*open)(LocalDevicePtr);   /* function to open (serial or USB) */
+    Bool (*open)(InputInfoPtr);   /* function to open (serial or USB) */
 } AiptekCommonRec, *AiptekCommonPtr;
 
 static InputInfoPtr xf86AiptekInit(InputDriverPtr, IDevPtr, int);
-static void xf86AiptekUninit(InputDriverPtr, LocalDevicePtr, int);
-static void xf86AiptekClose(LocalDevicePtr);
-static LocalDevicePtr xf86AiptekAllocateStylus(void);
-static LocalDevicePtr xf86AiptekAllocateCursor(void);
-static LocalDevicePtr xf86AiptekAllocateEraser(void);
+static void xf86AiptekUninit(InputDriverPtr, InputInfoPtr, int);
+static void xf86AiptekClose(InputInfoPtr);
+static InputInfoPtr xf86AiptekAllocateStylus(void);
+static InputInfoPtr xf86AiptekAllocateCursor(void);
+static InputInfoPtr xf86AiptekAllocateEraser(void);
 
 #define SYSCALL(call) while(((call) == -1) && (errno == EINTR))
 #define ABS(x) ((x) > 0 ? (x) : -(x))

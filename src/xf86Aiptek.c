@@ -209,7 +209,7 @@ static const char *default_options[] =
  * for xTop/xBottom/yTop/yBottom (or xSize/ySize).
  */
 static Bool
-xf86AiptekConvert(LocalDevicePtr local,
+xf86AiptekConvert(InputInfoPtr pInfo,
                   int            first,
                   int            num,
                   int            v0,
@@ -221,13 +221,13 @@ xf86AiptekConvert(LocalDevicePtr local,
                   int*           x,
                   int*           y)
 {
-    AiptekDevicePtr device = (AiptekDevicePtr) local->private;
+    AiptekDevicePtr device = (AiptekDevicePtr) pInfo->private;
     int  xSize, ySize;
     int  width, height;
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
     ScreenPtr pScreen = miPointerCurrentScreen();
 #else
-    ScreenPtr pScreen = miPointerGetScreen(local->dev);
+    ScreenPtr pScreen = miPointerGetScreen(pInfo->dev);
 #endif
 
     DBG(15, ErrorF(" xf86AiptekConvert(), with: first=%d, num=%d, v0=%d, "
@@ -287,7 +287,7 @@ xf86AiptekConvert(LocalDevicePtr local,
 
     if (device->screenNo != 0)
     {
-        xf86XInputSetScreen(local, device->screenNo, *x, *y);
+        xf86XInputSetScreen(pInfo, device->screenNo, *x, *y);
     }
     DBG(15, ErrorF("xf86AiptekConvert() exits, with: x=%d, y=%d\n",
 		   *x, *y));
@@ -300,12 +300,12 @@ xf86AiptekConvert(LocalDevicePtr local,
  * Convert X and Y to valuators.
  */
 static Bool
-xf86AiptekReverseConvert(LocalDevicePtr local,
+xf86AiptekReverseConvert(InputInfoPtr pInfo,
                          int            x,
                          int            y,
                          int*           valuators)
 {
-    AiptekDevicePtr device = (AiptekDevicePtr) local->private;
+    AiptekDevicePtr device = (AiptekDevicePtr) pInfo->private;
     int    xSize, ySize;
 
     DBG(15,  ErrorF("xf86AiptekReverseConvert(), with: x=%d, y=%d, "
@@ -326,7 +326,7 @@ xf86AiptekReverseConvert(LocalDevicePtr local,
 
     if (device->screenNo != 0)
     {
-        xf86XInputSetScreen(local,device->screenNo,valuators[0], valuators[1]);
+        xf86XInputSetScreen(pInfo,device->screenNo,valuators[0], valuators[1]);
     }
     DBG(15, ErrorF(": xf86AiptekReverseConvert() exits, with: "
 		   "valuators[0]=%d, valuators[1]=%d\n",
@@ -340,9 +340,9 @@ xf86AiptekReverseConvert(LocalDevicePtr local,
  *  Send events according to the device state.
  */
 static void
-xf86AiptekSendEvents(LocalDevicePtr local, int r_z)
+xf86AiptekSendEvents(InputInfoPtr pInfo, int r_z)
 {
-    AiptekDevicePtr device = (AiptekDevicePtr) local->private;
+    AiptekDevicePtr device = (AiptekDevicePtr) pInfo->private;
     AiptekCommonPtr common = device->common;
 
     int bCorePointer = FALSE, bAbsolute;
@@ -357,7 +357,7 @@ xf86AiptekSendEvents(LocalDevicePtr local, int r_z)
 
     bAbsolute    = (device->flags & ABSOLUTE_FLAG);
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
-    bCorePointer = xf86IsCorePointer(local->dev);
+    bCorePointer = xf86IsCorePointer(pInfo->dev);
 #endif
 
     /*
@@ -456,11 +456,11 @@ xf86AiptekSendEvents(LocalDevicePtr local, int r_z)
                  */
 
                 /* Keyboard 'make' (press) event */
-                xf86PostKeyEvent(local->dev, i+8, TRUE,
+                xf86PostKeyEvent(pInfo->dev, i+8, TRUE,
                                  bAbsolute, 0, 5,
                                  x, y, common->currentValues.button, xTilt, yTilt);
                 /* Keyboard 'break' (depress) event */
-                xf86PostKeyEvent(local->dev, i+8, FALSE,
+                xf86PostKeyEvent(pInfo->dev, i+8, FALSE,
                                  bAbsolute, 0, 5,
                                  x, y, common->currentValues.button, xTilt, yTilt);
                 break;
@@ -476,7 +476,7 @@ xf86AiptekSendEvents(LocalDevicePtr local, int r_z)
         {
             if (!bCorePointer)
             {
-                xf86PostProximityEvent(local->dev, 1, 0, 5,
+                xf86PostProximityEvent(pInfo->dev, 1, 0, 5,
                     x, y, z, xTilt, yTilt);
             }
         }
@@ -490,7 +490,7 @@ xf86AiptekSendEvents(LocalDevicePtr local, int r_z)
         {
             if (bAbsolute || common->previousValues.proximity)
             {
-                xf86PostMotionEvent(local->dev, bAbsolute, 0, 5,
+                xf86PostMotionEvent(pInfo->dev, bAbsolute, 0, 5,
                         x, y, z, xTilt, yTilt);
             }
         }
@@ -504,7 +504,7 @@ xf86AiptekSendEvents(LocalDevicePtr local, int r_z)
                 int id;
                 id = ffs(delta);
                 delta &= ~(1 << (id-1));
-                xf86PostButtonEvent(local->dev, bAbsolute, id,
+                xf86PostButtonEvent(pInfo->dev, bAbsolute, id,
                         (common->currentValues.button & (1<<(id-1))), 0, 5,
                         x, y, z, xTilt, yTilt);
             }
@@ -516,7 +516,7 @@ xf86AiptekSendEvents(LocalDevicePtr local, int r_z)
         {
             if (common->previousValues.proximity)
             {
-                xf86PostProximityEvent(local->dev, 0, 0, 5, x, y, z,
+                xf86PostProximityEvent(pInfo->dev, 0, 0, 5, x, y, z,
                         xTilt, yTilt);
             }
         }
@@ -530,9 +530,9 @@ xf86AiptekSendEvents(LocalDevicePtr local, int r_z)
  *    Read the new events from the device, and enqueue them.
  */
 static void
-xf86AiptekHIDReadInput(LocalDevicePtr local)
+xf86AiptekHIDReadInput(InputInfoPtr pInfo)
 {
-    AiptekDevicePtr     device = (AiptekDevicePtr) local->private;
+    AiptekDevicePtr     device = (AiptekDevicePtr) pInfo->private;
     AiptekCommonPtr     common = device->common;
 
     ssize_t             len;
@@ -543,7 +543,7 @@ xf86AiptekHIDReadInput(LocalDevicePtr local)
     double              d_z;
     double              d_zCapacity;
 
-    SYSCALL(len = read(local->fd, eventbuf, sizeof(eventbuf)));
+    SYSCALL(len = read(pInfo->fd, eventbuf, sizeof(eventbuf)));
 
     if (len <= 0)
     {
@@ -1015,9 +1015,9 @@ xf86AiptekHIDReadInput(LocalDevicePtr local)
  ***************************************************************************
  */
 static Bool
-xf86AiptekHIDOpen(LocalDevicePtr local)
+xf86AiptekHIDOpen(InputInfoPtr pInfo)
 {
-    AiptekDevicePtr device = (AiptekDevicePtr)local->private;
+    AiptekDevicePtr device = (AiptekDevicePtr)pInfo->private;
     AiptekCommonPtr common = device->common;
     char            name[256] = "Unknown";
     int             abs[5];
@@ -1026,47 +1026,47 @@ xf86AiptekHIDOpen(LocalDevicePtr local)
     int             err = 0;
     int             version;
 
-    local->fd = xf86OpenSerial(local->options);
-    if (local->fd == -1)
+    pInfo->fd = xf86OpenSerial(pInfo->options);
+    if (pInfo->fd == -1)
     {
         ErrorF("xf86AiptekHIDOpen Error opening %s : %s\n", common->deviceName, strerror(errno));
         return !Success;
     }
 
-    ioctl(local->fd, EVIOCGNAME(sizeof(name)), name);
+    ioctl(pInfo->fd, EVIOCGNAME(sizeof(name)), name);
     ErrorF("%s HID Device name: \"%s\"\n", XCONFIG_PROBED, name);
 
-    ioctl(local->fd, EVIOCGVERSION, &version);
+    ioctl(pInfo->fd, EVIOCGVERSION, &version);
     ErrorF("%s HID Driver Version: %d.%d.%d\n", XCONFIG_PROBED,
             version>>16, (version>>8) & 0xff, version & 0xff);
 
     ErrorF("%s HID Driver knows it has %d devices configured\n", XCONFIG_PROBED,
             common->numDevices);
-    ErrorF("%s HID Driver is using %d as the fd\n", XCONFIG_PROBED, local->fd);
+    ErrorF("%s HID Driver is using %d as the fd\n", XCONFIG_PROBED, pInfo->fd);
 
     for (i = 0; i < common->numDevices; ++i)
     {
         common->deviceArray[i]->read_input = xf86AiptekHIDReadInput;
-        common->deviceArray[i]->fd = local->fd;
+        common->deviceArray[i]->fd = pInfo->fd;
         common->deviceArray[i]->flags |= XI86_POINTER_CAPABLE | XI86_CONFIGURED;
     }
     common->open = xf86AiptekHIDOpen;
 
     memset(bit, 0, sizeof(bit));
-    ioctl(local->fd, EVIOCGBIT(0, EV_MAX), bit[0]);
+    ioctl(pInfo->fd, EVIOCGBIT(0, EV_MAX), bit[0]);
 
     for (i = 0; i < EV_MAX; ++i)
     {
         if (TEST_BIT(i, bit[0]))
         {
-            ioctl(local->fd, EVIOCGBIT(i, KEY_MAX), bit[i]);
+            ioctl(pInfo->fd, EVIOCGBIT(i, KEY_MAX), bit[i]);
             for (j = 0; j < KEY_MAX; ++j)
             {
                 if (TEST_BIT(j, bit[i]))
                 {
                     if (i == EV_ABS)
                     {
-                        ioctl(local->fd, EVIOCGABS(j), abs);
+                        ioctl(pInfo->fd, EVIOCGABS(j), abs);
                         switch (j) 
                         {
                             case ABS_X:
@@ -1099,7 +1099,7 @@ xf86AiptekHIDOpen(LocalDevicePtr local)
     if (err < 0)
     {
         ErrorF("xf86AiptekHIDOpen ERROR: %d\n", err);
-        SYSCALL(close(local->fd));
+        SYSCALL(close(pInfo->fd));
         return !Success;
     }
 
@@ -1122,16 +1122,16 @@ xf86AiptekControlProc(DeviceIntPtr device, PtrCtrl *ctrl)
  */
 
 static Bool
-xf86AiptekOpen(LocalDevicePtr local)
+xf86AiptekOpen(InputInfoPtr pInfo)
 {
-    AiptekDevicePtr device = (AiptekDevicePtr)local->private;
+    AiptekDevicePtr device = (AiptekDevicePtr)pInfo->private;
     AiptekCommonPtr common = device->common;
     int err, version;
 
     DBG(1, ErrorF("Opening %s\n", common->deviceName));
 
-    local->fd = xf86OpenSerial(local->options);
-    if (local->fd < 0)
+    pInfo->fd = xf86OpenSerial(pInfo->options);
+    if (pInfo->fd < 0)
     {
         ErrorF("Error opening %s: %s\n", common->deviceName, strerror(errno));
         return !Success;
@@ -1139,12 +1139,12 @@ xf86AiptekOpen(LocalDevicePtr local)
 
     DBG(1, ErrorF("Testing USB\n"));
 
-    SYSCALL(err = ioctl(local->fd, EVIOCGVERSION, &version));
+    SYSCALL(err = ioctl(pInfo->fd, EVIOCGVERSION, &version));
     if (!err)
     {
         int j;
 
-        SYSCALL(close(local->fd));
+        SYSCALL(close(pInfo->fd));
 
         for(j=0; j<common->numDevices; ++j)
         {
@@ -1152,7 +1152,7 @@ xf86AiptekOpen(LocalDevicePtr local)
         }
         common->open=xf86AiptekHIDOpen;
 
-        return xf86AiptekHIDOpen(local);
+        return xf86AiptekHIDOpen(pInfo);
     }
 
     /* We do not support TTY mode, so just exit angry. */
@@ -1166,27 +1166,27 @@ xf86AiptekOpen(LocalDevicePtr local)
 static int
 xf86AiptekOpenDevice(DeviceIntPtr pDriver)
 {
-    LocalDevicePtr    local  = (LocalDevicePtr)pDriver->public.devicePrivate;
+    InputInfoPtr    pInfo  = (InputInfoPtr)pDriver->public.devicePrivate;
     AiptekDevicePtr   device = (AiptekDevicePtr)PRIVATE(pDriver);
     AiptekCommonPtr   common = device->common;
     double            tabletRatio, screenRatio;
     double            xFactor, yFactor;
     int               gap, loop;
 
-    DBG(2, ErrorF("In xf86AiptekOpenDevice, with fd=%d\n", local->fd));
+    DBG(2, ErrorF("In xf86AiptekOpenDevice, with fd=%d\n", pInfo->fd));
 
-    if (local->fd < 0)
+    if (pInfo->fd < 0)
     {
         if (common->initNumber > 2 ||
             device->initNumber == common->initNumber)
         {
-            if (common->open(local) != Success)
+            if (common->open(pInfo) != Success)
             {
-                if (local->fd >= 0)
+                if (pInfo->fd >= 0)
                 {
-                    SYSCALL(close(local->fd));
+                    SYSCALL(close(pInfo->fd));
                 }
-                local->fd = -1;
+                pInfo->fd = -1;
                 return !Success;
             }
             else
@@ -1194,7 +1194,7 @@ xf86AiptekOpenDevice(DeviceIntPtr pDriver)
                 /* Report the file descriptor to all devices */
                 for (loop=0; loop < common->numDevices; ++loop)
                 {
-                    common->deviceArray[loop]->fd = local->fd;
+                    common->deviceArray[loop]->fd = pInfo->fd;
                 }
             }
             common->initNumber++;
@@ -1560,7 +1560,7 @@ xf86AiptekOpenDevice(DeviceIntPtr pDriver)
      * any wheel devices. But if we did, it would be allocated
      * here.
      */
-    return (local->fd != -1);
+    return (pInfo->fd != -1);
 }
 
 /*
@@ -1592,7 +1592,7 @@ xf86AiptekProc(DeviceIntPtr pAiptek, int requestCode)
     int             numAxes = 5; /* X, Y, Z, xTilt, yTilt */
     int             numButtons = 5;
     int             loop;
-    LocalDevicePtr  local  = (LocalDevicePtr)pAiptek->public.devicePrivate;
+    InputInfoPtr  pInfo  = (InputInfoPtr)pAiptek->public.devicePrivate;
     AiptekDevicePtr device = (AiptekDevicePtr)PRIVATE(pAiptek);
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
     Atom            btn_labels[numAxes];
@@ -1681,7 +1681,7 @@ xf86AiptekProc(DeviceIntPtr pAiptek, int requestCode)
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 3
                    xf86GetMotionEvents,
 #endif
-                   local->history_size,
+                   pInfo->history_size,
                    ((device->flags & ABSOLUTE_FLAG) 
                         ? Absolute : Relative) | OutOfProximity ) == FALSE)
             {
@@ -1690,7 +1690,7 @@ xf86AiptekProc(DeviceIntPtr pAiptek, int requestCode)
             }
 
             /* Allocate the motion history buffer if needed */
-            xf86MotionHistoryAllocate(local);
+            xf86MotionHistoryAllocate(pInfo);
 
             /* Open the device to gather information */
             xf86AiptekOpenDevice(pAiptek);
@@ -1701,14 +1701,14 @@ xf86AiptekProc(DeviceIntPtr pAiptek, int requestCode)
         {
             DBG(1, ErrorF("xf86AiptekProc request=ON\n"));
 
-            if ((local->fd < 0) && 
+            if ((pInfo->fd < 0) &&
                 (!xf86AiptekOpenDevice(pAiptek)))
             {
                 ErrorF("Unable to open aiptek device\n");
                 return !Success;
             }
             ErrorF("Able to open aiptek device\n");
-            xf86AddEnabledDevice(local);
+            xf86AddEnabledDevice(pInfo);
             pAiptek->public.on = TRUE;
         }
         break;
@@ -1716,10 +1716,10 @@ xf86AiptekProc(DeviceIntPtr pAiptek, int requestCode)
         case DEVICE_OFF:
         {
 	    DBG(1, ErrorF("xf86AiptekProc request=OFF\n"));
-            if (local->fd >= 0)
+            if (pInfo->fd >= 0)
             {
-                xf86RemoveEnabledDevice(local);
-                xf86AiptekClose(local);
+                xf86RemoveEnabledDevice(pInfo);
+                xf86AiptekClose(pInfo);
             }
             pAiptek->public.on = FALSE;
         }
@@ -1728,7 +1728,7 @@ xf86AiptekProc(DeviceIntPtr pAiptek, int requestCode)
         case DEVICE_CLOSE:
         {
   	    DBG(1, ErrorF("xf86AiptekProc request=CLOSE\n"));
-            xf86AiptekClose(local);
+            xf86AiptekClose(pInfo);
         }
         break;
 
@@ -1748,13 +1748,13 @@ xf86AiptekProc(DeviceIntPtr pAiptek, int requestCode)
  * Perhaps this will close the device
  */
 static void
-xf86AiptekClose(LocalDevicePtr local)
+xf86AiptekClose(InputInfoPtr pInfo)
 {
-    if (local->fd >= 0)
+    if (pInfo->fd >= 0)
     {
-        SYSCALL(close(local->fd));
+        SYSCALL(close(pInfo->fd));
     }
-    local->fd = -1;
+    pInfo->fd = -1;
 }
 
 /*
@@ -1767,7 +1767,7 @@ xf86AiptekClose(LocalDevicePtr local)
  * get dispatched.
  */
 static int
-xf86AiptekChangeControl(LocalDevicePtr local, xDeviceCtl *control)
+xf86AiptekChangeControl(InputInfoPtr pInfo, xDeviceCtl *control)
 {
     xDeviceResolutionCtl    *res;
     int                     *resolutions;
@@ -1791,7 +1791,7 @@ xf86AiptekChangeControl(LocalDevicePtr local, xDeviceCtl *control)
     /* We don't know how to write, yet
      *
      * sprintf(str, "SU%d\r", resolutions[0]);
-     * SYSCALL(write(local->fd, str, strlen(str)));
+     * SYSCALL(write(pInfo->fd, str, strlen(str)));
      */
 
     return(Success);
@@ -1805,8 +1805,8 @@ xf86AiptekChangeControl(LocalDevicePtr local, xDeviceCtl *control)
 static int
 xf86AiptekSwitchMode(ClientPtr client, DeviceIntPtr dev, int mode)
 {
-    LocalDevicePtr  local  = (LocalDevicePtr)dev->public.devicePrivate;
-    AiptekDevicePtr device = (AiptekDevicePtr)(local->private);
+    InputInfoPtr  pInfo  = (InputInfoPtr)dev->public.devicePrivate;
+    AiptekDevicePtr device = (AiptekDevicePtr)(pInfo->private);
 
     DBG(3, ErrorF("xf86AiptekSwitchMode() dev=%p mode=%d\n", dev, mode));
 
@@ -1840,12 +1840,12 @@ xf86AiptekSwitchMode(ClientPtr client, DeviceIntPtr dev, int mode)
  * xf86AiptekAllocate
  * Allocates the device structures for the Aiptek.
  */
-static LocalDevicePtr
+static InputInfoPtr
 xf86AiptekAllocate(char* name,
                 int   flag)
 {
-    LocalDevicePtr    local;
-    LocalDevicePtr*   deviceArray;
+    InputInfoPtr    pInfo;
+    InputInfoPtr*   deviceArray;
     AiptekDevicePtr   device;
     AiptekCommonPtr   common;
 
@@ -1866,7 +1866,7 @@ xf86AiptekAllocate(char* name,
         return NULL;
     }
 
-    deviceArray = (LocalDevicePtr*) malloc(sizeof(LocalDevicePtr));
+    deviceArray = (InputInfoPtr*) malloc(sizeof(InputInfoPtr));
     if (!deviceArray)
     {
         DBG(3, ErrorF("xf86AiptekAllocate failed to allocate 'deviceArray'\n"));
@@ -1876,8 +1876,8 @@ xf86AiptekAllocate(char* name,
     }
 
 
-    local = xf86AllocateInput(aiptekDrv, 0);
-    if (!local)
+    pInfo = xf86AllocateInput(aiptekDrv, 0);
+    if (!pInfo)
     {
         DBG(3, ErrorF("xf86AiptekAllocate failed at xf86AllocateInput()\n"));
         free(device);
@@ -1886,23 +1886,23 @@ xf86AiptekAllocate(char* name,
         return NULL;
     }
 
-    local->name =                       name;
-    local->type_name =                  "Aiptek";
-    local->flags =                      0;
-    local->device_control =             xf86AiptekProc;
-    local->read_input =                 xf86AiptekHIDReadInput;
-    local->control_proc =               xf86AiptekChangeControl;
-    local->close_proc =                 xf86AiptekClose;
-    local->switch_mode =                xf86AiptekSwitchMode;
-    local->conversion_proc =            xf86AiptekConvert;
-    local->reverse_conversion_proc =    xf86AiptekReverseConvert;
+    pInfo->name =                       name;
+    pInfo->type_name =                  "Aiptek";
+    pInfo->flags =                      0;
+    pInfo->device_control =             xf86AiptekProc;
+    pInfo->read_input =                 xf86AiptekHIDReadInput;
+    pInfo->control_proc =               xf86AiptekChangeControl;
+    pInfo->close_proc =                 xf86AiptekClose;
+    pInfo->switch_mode =                xf86AiptekSwitchMode;
+    pInfo->conversion_proc =            xf86AiptekConvert;
+    pInfo->reverse_conversion_proc =    xf86AiptekReverseConvert;
 
-    local->fd =             VALUE_NA;
-    local->atom =           0;
-    local->dev =            NULL;
-    local->private =        device;
-    local->private_flags =  0;
-    local->history_size  =  0;
+    pInfo->fd =             VALUE_NA;
+    pInfo->atom =           0;
+    pInfo->dev =            NULL;
+    pInfo->private =        device;
+    pInfo->private_flags =  0;
+    pInfo->history_size  =  0;
 
     device->flags =         flag;       /* various flags (device type, 
                                          * coordinate type */
@@ -1962,7 +1962,7 @@ xf86AiptekAllocate(char* name,
     common->deviceName =    "";             /* device file name */
     common->flags =         0;              /* various flags */
     common->deviceArray =   deviceArray;    /* Array of tablets */
-    common->deviceArray[0]= local;          /* with local as element */
+    common->deviceArray[0]= pInfo;          /* with pInfo as element */
     common->numDevices =    1;              /* number of devices */
 
     common->xCapacity =     0;              /* tablet's max X value */
@@ -1970,53 +1970,53 @@ xf86AiptekAllocate(char* name,
     common->zCapacity =     0;              /* tablet's max Z value */
     common->open =          xf86AiptekOpen; /* Open function */
 
-    return local;
+    return pInfo;
 }
 
 /*
  * xf86AiptekAllocateStylus
  */
-static LocalDevicePtr
+static InputInfoPtr
 xf86AiptekAllocateStylus(void)
 {
-    LocalDevicePtr local = xf86AiptekAllocate(XI_STYLUS, STYLUS_ID);
+    InputInfoPtr pInfo = xf86AiptekAllocate(XI_STYLUS, STYLUS_ID);
     
-    if (local)
+    if (pInfo)
     {
-        local->type_name = "Stylus";
+        pInfo->type_name = "Stylus";
     }
-    return local;
+    return pInfo;
 }
 
 /*
  * xf86AiptekAllocateCursor
  */
-static LocalDevicePtr
+static InputInfoPtr
 xf86AiptekAllocateCursor(void)
 {
-    LocalDevicePtr local = xf86AiptekAllocate(XI_CURSOR, CURSOR_ID);
+    InputInfoPtr pInfo = xf86AiptekAllocate(XI_CURSOR, CURSOR_ID);
     
-    if (local)
+    if (pInfo)
     {
-        local->type_name = "Cursor";
+        pInfo->type_name = "Cursor";
     }
-    return local;
+    return pInfo;
 }
 
 /*
  * xf86AiptekAllocateEraser
  */
-static LocalDevicePtr
+static InputInfoPtr
 xf86AiptekAllocateEraser(void)
 {
-    LocalDevicePtr local = xf86AiptekAllocate(XI_ERASER,
+    InputInfoPtr pInfo = xf86AiptekAllocate(XI_ERASER,
             ABSOLUTE_FLAG|ERASER_ID);
     
-    if (local)
+    if (pInfo)
     {
-        local->type_name = "Eraser";
+        pInfo->type_name = "Eraser";
     }
-    return local;
+    return pInfo;
 }
 
 /*
@@ -2053,14 +2053,14 @@ DeviceAssocRec aiptek_eraser_assoc =
  */
 static void
 xf86AiptekUninit(InputDriverPtr    drv,
-                 LocalDevicePtr    local,
+                 InputInfoPtr    pInfo,
                  int               flags)
 {
-    AiptekDevicePtr device = (AiptekDevicePtr) local->private;
+    AiptekDevicePtr device = (AiptekDevicePtr) pInfo->private;
 
     DBG(1, ErrorF("xf86AiptekUninit\n"));
 
-    xf86AiptekProc(local->dev, DEVICE_OFF);
+    xf86AiptekProc(pInfo->dev, DEVICE_OFF);
 
     if (device->common && device->common->xCapacity != -10101)
     {
@@ -2068,8 +2068,8 @@ xf86AiptekUninit(InputDriverPtr    drv,
         free(device->common);
     }
     free (device);
-    local->private = NULL;
-    xf86DeleteInput(local, 0);
+    pInfo->private = NULL;
+    xf86DeleteInput(pInfo, 0);
 }
 
 /*
@@ -2082,11 +2082,11 @@ xf86AiptekInit(InputDriverPtr    drv,
                IDevPtr           dev,
                int               flags)
 {
-    LocalDevicePtr    local     = NULL;
-    LocalDevicePtr    fakeLocal = NULL;
+    InputInfoPtr    pInfo     = NULL;
+    InputInfoPtr    fakepInfo = NULL;
     AiptekDevicePtr   device    = NULL;
     AiptekCommonPtr   common    = NULL;
-    LocalDevicePtr    locals;
+    InputInfoPtr    pInfos;
     char*             s;
     int               shared;
 
@@ -2094,33 +2094,33 @@ xf86AiptekInit(InputDriverPtr    drv,
 
     xf86Msg(X_INFO, "xf86AiptekInit(): begins\n");
 
-    fakeLocal = (LocalDevicePtr) calloc(1, sizeof(LocalDeviceRec));
-    if (!fakeLocal)
+    fakepInfo = (InputInfoPtr) calloc(1, sizeof(InputInfoRec));
+    if (!fakepInfo)
     {
         return NULL;
     }
 
-    fakeLocal->conf_idev = dev;
+    fakepInfo->conf_idev = dev;
 
     /*
-     * fakeLocal is here so it can have default serial init values.
+     * fakepInfo is here so it can have default serial init values.
      * Is this something to remove? TODO
      */
-    xf86CollectInputOptions(fakeLocal, default_options, NULL);
+    xf86CollectInputOptions(fakepInfo, default_options, NULL);
 
 /* Type */
-    s = xf86FindOptionValue(fakeLocal->options, "Type");
+    s = xf86FindOptionValue(fakepInfo->options, "Type");
     if (s && (xf86NameCmp(s, "stylus") == 0))
     {
-        local = xf86AiptekAllocateStylus();
+        pInfo = xf86AiptekAllocateStylus();
     }
     else if (s && (xf86NameCmp(s, "cursor") == 0))
     {
-        local = xf86AiptekAllocateCursor();
+        pInfo = xf86AiptekAllocateCursor();
     }
     else if (s && (xf86NameCmp(s, "eraser") == 0))
     {
-        local = xf86AiptekAllocateEraser();
+        pInfo = xf86AiptekAllocateEraser();
     }
     else
     {
@@ -2129,24 +2129,24 @@ xf86AiptekInit(InputDriverPtr    drv,
                   dev->identifier);
     }
 
-    if(!local)
+    if(!pInfo)
     {
-        free(fakeLocal);
+        free(fakepInfo);
         return NULL;
     }
 
-    device = (AiptekDevicePtr) local->private;
+    device = (AiptekDevicePtr) pInfo->private;
 
     common              = device->common;
 
-    local->options      = fakeLocal->options;
-    local->conf_idev    = fakeLocal->conf_idev;
-    local->name         = dev->identifier;
-    free(fakeLocal);
+    pInfo->options      = fakepInfo->options;
+    pInfo->conf_idev    = fakepInfo->conf_idev;
+    pInfo->name         = dev->identifier;
+    free(fakepInfo);
 
 /* Device */
 /* (mandatory) */
-    common->deviceName = xf86FindOptionValue(local->options, "Device");
+    common->deviceName = xf86FindOptionValue(pInfo->options, "Device");
     if(!common->deviceName)
     {
         xf86Msg(X_ERROR, "%s: No Device specified.\n", dev->identifier);
@@ -2159,19 +2159,19 @@ xf86AiptekInit(InputDriverPtr    drv,
      */
 
     shared = 0;
-    for (locals = xf86FirstLocalDevice();
-         locals != NULL;
-         locals = locals->next)
+    for (pInfos = xf86FirstLocalDevice();
+         pInfos != NULL;
+         pInfos = pInfos->next)
     {
-        if((local != locals) &&
-           (locals->device_control == xf86AiptekProc) &&
-           (strcmp(((AiptekDevicePtr)locals->private)->common->deviceName,
+        if((pInfo != pInfos) &&
+           (pInfos->device_control == xf86AiptekProc) &&
+           (strcmp(((AiptekDevicePtr)pInfos->private)->common->deviceName,
                     common->deviceName) == 0))
         {
             xf86Msg(X_CONFIG,
                     "xf86AiptekConfig: device shared between %s and %s\n",
-                    local->name,
-                    locals->name);
+                    pInfo->name,
+                    pInfos->name);
 
             shared = 1;
 
@@ -2179,23 +2179,23 @@ xf86AiptekInit(InputDriverPtr    drv,
             free(common);
 
             common = device->common =
-                ((AiptekDevicePtr) locals->private)->common;
+                ((AiptekDevicePtr) pInfos->private)->common;
             common->numDevices++;
-            common->deviceArray = (LocalDevicePtr*)realloc(common->deviceArray,
-                    sizeof(LocalDevicePtr)*common->numDevices);
-            common->deviceArray[common->numDevices-1] = local;
+            common->deviceArray = (InputInfoPtr*)realloc(common->deviceArray,
+                    sizeof(InputInfoPtr)*common->numDevices);
+            common->deviceArray[common->numDevices-1] = pInfo;
             break;
         }
         else
         {
             xf86Msg(X_CONFIG, 
                     "xf86AiptekConfig: device not shared btw %s and %s\n",
-                    local->name, locals->name);
+                    pInfo->name, pInfos->name);
         }
     }
 
     /* Process the common options */
-    xf86ProcessCommonOptions(local, local->options);
+    xf86ProcessCommonOptions(pInfo, pInfo->options);
 
     /* If this is the first device using the aiptek driver, let's open
      * the interface so as to obtain legit values for xCapacity and yCapacity
@@ -2204,9 +2204,9 @@ xf86AiptekInit(InputDriverPtr    drv,
      */
     if ( shared == 0)
     {
-        xf86AiptekHIDOpen(local);
-        close(local->fd);
-        local->fd=-1;
+        xf86AiptekHIDOpen(pInfo);
+        close(pInfo->fd);
+        pInfo->fd=-1;
     }
 
     /* Optional configuration */
@@ -2214,14 +2214,14 @@ xf86AiptekInit(InputDriverPtr    drv,
             common->deviceName);
 
 /* DebugLevel */
-    debug_level = xf86SetIntOption(local->options, "DebugLevel", debug_level);
+    debug_level = xf86SetIntOption(pInfo->options, "DebugLevel", debug_level);
     if ( debug_level > 0)
     {
         xf86Msg(X_CONFIG, "Debug level set to %d\n", debug_level);
     }
 
 /* zMode */
-    s = xf86FindOptionValue(local->options, "Pressure");
+    s = xf86FindOptionValue(pInfo->options, "Pressure");
     if ( s && (xf86NameCmp(s, "hard") == 0))
     {
         device->zMode = PRESSURE_MODE_HARD_SMOOTH;
@@ -2241,7 +2241,7 @@ xf86AiptekInit(InputDriverPtr    drv,
     }
 
 /* Mode */
-    s = xf86FindOptionValue(local->options, "Mode");
+    s = xf86FindOptionValue(pInfo->options, "Mode");
     if (s && (xf86NameCmp(s, "absolute") == 0))
     {
         device->flags |= ABSOLUTE_FLAG;
@@ -2256,7 +2256,7 @@ xf86AiptekInit(InputDriverPtr    drv,
             dev->identifier);
         device->flags |= ABSOLUTE_FLAG;
     }
-    xf86Msg(X_CONFIG, "%s is in %s mode\n", local->name,
+    xf86Msg(X_CONFIG, "%s is in %s mode\n", pInfo->name,
         (device->flags & ABSOLUTE_FLAG) ? "absolute" : "relative");
 
 #ifdef HAVE_LINUX_INPUT_H
@@ -2269,15 +2269,15 @@ xf86AiptekInit(InputDriverPtr    drv,
      *
      * This option is misnamed, misunderstood, misanthrope. Maybe.
      */
-    if (xf86SetBoolOption(local->options, "USB",
+    if (xf86SetBoolOption(pInfo->options, "USB",
                           (common->open == xf86AiptekHIDOpen)))
     {
-        local->read_input=xf86AiptekHIDReadInput;
+        pInfo->read_input=xf86AiptekHIDReadInput;
         common->open=xf86AiptekHIDOpen;
         xf86Msg(X_CONFIG, "%s: reading USB link\n", dev->identifier);
     }
 #else
-    if (xf86SetBoolOption(local->options, "USB", 0))
+    if (xf86SetBoolOption(pInfo->options, "USB", 0))
     {
         ErrorF("The Aiptek USB driver isn't available for your platform.\n");
         goto SetupProc_fail;
@@ -2285,7 +2285,7 @@ xf86AiptekInit(InputDriverPtr    drv,
 #endif
 
 /* ScreenNo */
-    device->screenNo = xf86SetIntOption(local->options, "ScreenNo", VALUE_NA);
+    device->screenNo = xf86SetIntOption(pInfo->options, "ScreenNo", VALUE_NA);
     if (device->screenNo != VALUE_NA)
     {
         xf86Msg(X_CONFIG, "%s: attached to screen number %d\n",
@@ -2293,15 +2293,15 @@ xf86AiptekInit(InputDriverPtr    drv,
     }
 
 /* KeepShape */
-    if (xf86SetBoolOption(local->options, "KeepShape", 0))
+    if (xf86SetBoolOption(pInfo->options, "KeepShape", 0))
     {
         device->flags |= KEEP_SHAPE_FLAG;
         xf86Msg(X_CONFIG, "%s: keeps shape\n", dev->identifier);
     }
 
 /* XSize */
-    device->xSize = xf86SetIntOption(local->options, "XSize", device->xSize);
-    device->xSize = xf86SetIntOption(local->options, "SizeX", device->xSize);
+    device->xSize = xf86SetIntOption(pInfo->options, "XSize", device->xSize);
+    device->xSize = xf86SetIntOption(pInfo->options, "SizeX", device->xSize);
     if (device->xSize != VALUE_NA) 
     {
         xf86Msg(X_CONFIG, "%s: XSize/SizeX = %d\n", dev->identifier,
@@ -2309,8 +2309,8 @@ xf86AiptekInit(InputDriverPtr    drv,
     }
 
 /* YSize */
-    device->ySize = xf86SetIntOption(local->options, "YSize", device->ySize);
-    device->ySize = xf86SetIntOption(local->options, "SizeY", device->ySize);
+    device->ySize = xf86SetIntOption(pInfo->options, "YSize", device->ySize);
+    device->ySize = xf86SetIntOption(pInfo->options, "SizeY", device->ySize);
     if (device->ySize != VALUE_NA) 
     {
         xf86Msg(X_CONFIG, "%s: YSize/SizeY = %d\n", dev->identifier,
@@ -2318,9 +2318,9 @@ xf86AiptekInit(InputDriverPtr    drv,
     }
 
 /* XOffset */
-    device->xOffset = xf86SetIntOption(local->options, "XOffset", 
+    device->xOffset = xf86SetIntOption(pInfo->options, "XOffset",
             device->xOffset);
-    device->xOffset = xf86SetIntOption(local->options, "OffsetX", 
+    device->xOffset = xf86SetIntOption(pInfo->options, "OffsetX",
             device->xOffset);
     if (device->xOffset != VALUE_NA)
     {
@@ -2329,9 +2329,9 @@ xf86AiptekInit(InputDriverPtr    drv,
     }
 
 /* YOffset */
-    device->yOffset = xf86SetIntOption(local->options, "YOffset",
+    device->yOffset = xf86SetIntOption(pInfo->options, "YOffset",
             device->yOffset);
-    device->yOffset = xf86SetIntOption(local->options, "OffsetY",
+    device->yOffset = xf86SetIntOption(pInfo->options, "OffsetY",
             device->yOffset);
     if (device->yOffset != VALUE_NA)
     {
@@ -2340,9 +2340,9 @@ xf86AiptekInit(InputDriverPtr    drv,
     }
 
 /* XThreshold */
-    device->xThreshold = xf86SetIntOption(local->options, "XThreshold",
+    device->xThreshold = xf86SetIntOption(pInfo->options, "XThreshold",
             device->xThreshold);
-    device->xThreshold = xf86SetIntOption(local->options, "ThresholdX",
+    device->xThreshold = xf86SetIntOption(pInfo->options, "ThresholdX",
             device->xThreshold);
     if (device->xThreshold != VALUE_NA)
     {
@@ -2351,9 +2351,9 @@ xf86AiptekInit(InputDriverPtr    drv,
     }
 
 /* YThreshold */
-    device->yThreshold = xf86SetIntOption(local->options, "YThreshold",
+    device->yThreshold = xf86SetIntOption(pInfo->options, "YThreshold",
             device->yThreshold);
-    device->yThreshold = xf86SetIntOption(local->options, "ThresholdY",
+    device->yThreshold = xf86SetIntOption(pInfo->options, "ThresholdY",
             device->yThreshold);
     if (device->yThreshold != VALUE_NA)
     {
@@ -2362,9 +2362,9 @@ xf86AiptekInit(InputDriverPtr    drv,
     }
 
 /* ZThreshold */
-    device->zThreshold = xf86SetIntOption(local->options, "ZThreshold",
+    device->zThreshold = xf86SetIntOption(pInfo->options, "ZThreshold",
             device->zThreshold);
-    device->zThreshold = xf86SetIntOption(local->options, "ThresholdZ",
+    device->zThreshold = xf86SetIntOption(pInfo->options, "ThresholdZ",
             device->zThreshold);
     if (device->zThreshold != VALUE_NA)
     {
@@ -2373,9 +2373,9 @@ xf86AiptekInit(InputDriverPtr    drv,
     }
 
 /* XTiltThreshold */
-    device->xTiltThreshold = xf86SetIntOption(local->options, "XTiltThreshold",
+    device->xTiltThreshold = xf86SetIntOption(pInfo->options, "XTiltThreshold",
             device->xTiltThreshold);
-    device->xTiltThreshold = xf86SetIntOption(local->options, "ThresholdXTilt",
+    device->xTiltThreshold = xf86SetIntOption(pInfo->options, "ThresholdXTilt",
             device->xTiltThreshold);
     if (device->xTiltThreshold != VALUE_NA)
     {
@@ -2384,9 +2384,9 @@ xf86AiptekInit(InputDriverPtr    drv,
     }
 
 /* YTiltThreshold */
-    device->yTiltThreshold = xf86SetIntOption(local->options, "YTiltThreshold",
+    device->yTiltThreshold = xf86SetIntOption(pInfo->options, "YTiltThreshold",
             device->yTiltThreshold);
-    device->yTiltThreshold = xf86SetIntOption(local->options, "ThresholdYTilt",
+    device->yTiltThreshold = xf86SetIntOption(pInfo->options, "ThresholdYTilt",
             device->yTiltThreshold);
     if (device->yTiltThreshold != VALUE_NA)
     {
@@ -2395,8 +2395,8 @@ xf86AiptekInit(InputDriverPtr    drv,
     }
 
 /* XMax */
-    device->xMax = xf86SetIntOption(local->options, "XMax", device->xMax);
-    device->xMax = xf86SetIntOption(local->options, "MaxX", device->xMax);
+    device->xMax = xf86SetIntOption(pInfo->options, "XMax", device->xMax);
+    device->xMax = xf86SetIntOption(pInfo->options, "MaxX", device->xMax);
     if (device->xMax != VALUE_NA)
     {
         xf86Msg(X_CONFIG, "%s: XMax/MaxX = %d\n", dev->identifier,
@@ -2404,8 +2404,8 @@ xf86AiptekInit(InputDriverPtr    drv,
     }
 
 /* YMax */
-    device->yMax = xf86SetIntOption(local->options, "YMax", device->yMax);
-    device->yMax = xf86SetIntOption(local->options, "MaxY", device->yMax);
+    device->yMax = xf86SetIntOption(pInfo->options, "YMax", device->yMax);
+    device->yMax = xf86SetIntOption(pInfo->options, "MaxY", device->yMax);
     if (device->yMax != VALUE_NA)
     {
         xf86Msg(X_CONFIG, "%s: YMax/MaxY = %d\n", dev->identifier,
@@ -2413,8 +2413,8 @@ xf86AiptekInit(InputDriverPtr    drv,
     }
 
 /* ZMax */
-    device->zMax = xf86SetIntOption(local->options, "ZMax", device->zMax);
-    device->zMax = xf86SetIntOption(local->options, "MaxZ", device->zMax);
+    device->zMax = xf86SetIntOption(pInfo->options, "ZMax", device->zMax);
+    device->zMax = xf86SetIntOption(pInfo->options, "MaxZ", device->zMax);
     if (device->zMax != VALUE_NA)
     {
         xf86Msg(X_CONFIG, "%s: ZMax/MaxZ = %d\n", dev->identifier,
@@ -2422,8 +2422,8 @@ xf86AiptekInit(InputDriverPtr    drv,
     }
 
 /* ZMin */
-    device->zMin = xf86SetIntOption(local->options, "ZMin", device->zMin);
-    device->zMin = xf86SetIntOption(local->options, "MinZ", device->zMin);
+    device->zMin = xf86SetIntOption(pInfo->options, "ZMin", device->zMin);
+    device->zMin = xf86SetIntOption(pInfo->options, "MinZ", device->zMin);
     if (device->zMin != VALUE_NA)
     {
         xf86Msg(X_CONFIG, "%s: ZMin/MinZ = %d\n", dev->identifier,
@@ -2431,8 +2431,8 @@ xf86AiptekInit(InputDriverPtr    drv,
     }
 
 /* TopX */
-    device->xTop = xf86SetIntOption(local->options, "TopX", device->xTop);
-    device->xTop = xf86SetIntOption(local->options, "XTop", device->xTop);
+    device->xTop = xf86SetIntOption(pInfo->options, "TopX", device->xTop);
+    device->xTop = xf86SetIntOption(pInfo->options, "XTop", device->xTop);
     if (device->xTop != VALUE_NA)
     {
         xf86Msg(X_CONFIG, "%s: TopX/XTop = %d\n", dev->identifier,
@@ -2440,8 +2440,8 @@ xf86AiptekInit(InputDriverPtr    drv,
     }
 
 /* TopY */
-    device->yTop = xf86SetIntOption(local->options, "TopY", device->yTop);
-    device->yTop = xf86SetIntOption(local->options, "YTop", device->yTop);
+    device->yTop = xf86SetIntOption(pInfo->options, "TopY", device->yTop);
+    device->yTop = xf86SetIntOption(pInfo->options, "YTop", device->yTop);
     if (device->yTop != VALUE_NA)
     {
         xf86Msg(X_CONFIG, "%s: TopY/YTop = %d\n", dev->identifier,
@@ -2449,9 +2449,9 @@ xf86AiptekInit(InputDriverPtr    drv,
     }
 
 /* BottomX */
-    device->xBottom = xf86SetIntOption(local->options, "BottomX",
+    device->xBottom = xf86SetIntOption(pInfo->options, "BottomX",
             device->xBottom);
-    device->xBottom = xf86SetIntOption(local->options, "XBottom",
+    device->xBottom = xf86SetIntOption(pInfo->options, "XBottom",
             device->xBottom);
     if (device->xBottom != VALUE_NA)
     {
@@ -2460,9 +2460,9 @@ xf86AiptekInit(InputDriverPtr    drv,
     }
 
 /* BottomY */
-    device->yBottom = xf86SetIntOption(local->options, "BottomY",
+    device->yBottom = xf86SetIntOption(pInfo->options, "BottomY",
             device->yBottom);
-    device->yBottom = xf86SetIntOption(local->options, "YBottom",
+    device->yBottom = xf86SetIntOption(pInfo->options, "YBottom",
             device->yBottom);
     if (device->yBottom != VALUE_NA)
     {
@@ -2471,14 +2471,14 @@ xf86AiptekInit(InputDriverPtr    drv,
     }
 
 /* InvX */
-    if (xf86SetBoolOption(local->options, "InvX", FALSE))
+    if (xf86SetBoolOption(pInfo->options, "InvX", FALSE))
     {
         device->flags |= INVX_FLAG;
         xf86Msg(X_CONFIG, "%s: InvX\n", dev->identifier);
     }
 
 /* InvY */
-    if (xf86SetBoolOption(local->options, "InvY", FALSE))
+    if (xf86SetBoolOption(pInfo->options, "InvY", FALSE))
     {
         device->flags |= INVY_FLAG;
         xf86Msg(X_CONFIG, "%s: InvY\n", dev->identifier);
@@ -2487,7 +2487,7 @@ xf86AiptekInit(InputDriverPtr    drv,
 /* BaudRate */
     {
         int val;
-        val = xf86SetIntOption(local->options, "BaudRate", 0);
+        val = xf86SetIntOption(pInfo->options, "BaudRate", 0);
 
         switch(val)
         {
@@ -2509,18 +2509,18 @@ xf86AiptekInit(InputDriverPtr    drv,
     xf86Msg(X_CONFIG, "%s: xf86AiptekInit() finished\n", dev->identifier);
 
     /* Mark the device as configured */
-    local->flags |= XI86_POINTER_CAPABLE | XI86_CONFIGURED;
+    pInfo->flags |= XI86_POINTER_CAPABLE | XI86_CONFIGURED;
 
-    /* return the LocalDevice */
-    return (local);
+    /* return the pInfoDevice */
+    return (pInfo);
 
 SetupProc_fail:
     if (common)
         free(common);
     if (device)
         free(device);
-    if (local)
-        free(local);
+    if (pInfo)
+        free(pInfo);
     return NULL;
 }
 
