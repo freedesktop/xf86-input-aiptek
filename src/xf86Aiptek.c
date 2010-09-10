@@ -1048,7 +1048,7 @@ xf86AiptekHIDOpen(InputInfoPtr pInfo)
     {
         common->deviceArray[i]->read_input = xf86AiptekHIDReadInput;
         common->deviceArray[i]->fd = pInfo->fd;
-        common->deviceArray[i]->flags |= XI86_POINTER_CAPABLE | XI86_CONFIGURED;
+        common->deviceArray[i]->flags |= XI86_CONFIGURED;
     }
     common->open = xf86AiptekHIDOpen;
 
@@ -2509,7 +2509,7 @@ xf86AiptekInit(InputDriverPtr    drv,
     xf86Msg(X_CONFIG, "%s: xf86AiptekInit() finished\n", dev->identifier);
 
     /* Mark the device as configured */
-    pInfo->flags |= XI86_POINTER_CAPABLE | XI86_CONFIGURED;
+    pInfo->flags |= XI86_CONFIGURED;
 
     /* return the pInfoDevice */
     return (pInfo);
