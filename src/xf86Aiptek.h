@@ -34,8 +34,6 @@
  * TORTIOUS ACTIONS, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  * PERFORMANCE OF THIS SOFTWARE.
  */
-/* $XdotOrg: driver/xf86-input-aiptek/src/xf86Aiptek.h,v 1.4 2005/07/13 02:18:12 kem Exp $ */
-/* $XFree86: xc/programs/Xserver/hw/xfree86/input/aiptek/xf86Aiptek.h,v 1.2 2003/11/03 05:36:32 tsi Exp $ */
 
 #ifndef _AIPTEK_H_
 #define _AIPTEK_H_

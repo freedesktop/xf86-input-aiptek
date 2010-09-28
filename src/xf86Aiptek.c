@@ -53,7 +53,6 @@
  * TORTIOUS ACTIONS, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  * PERFORMANCE OF THIS SOFTWARE.
  */
-/* $XFree86: xc/programs/Xserver/hw/xfree86/input/aiptek/xf86Aiptek.c,v 1.1tsi Exp $ */
 
 /*
  *
