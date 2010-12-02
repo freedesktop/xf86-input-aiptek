@@ -170,133 +170,6 @@ static int linux_inputDevice_keyMap[] =
     KEY_OPEN, KEY_PASTE
 };
 
-/*
- * xf86AiptekConvert
- * Convert valuators to X and Y. We deal with multiple X screens, adjusting
- * for xTop/xBottom/yTop/yBottom (or xSize/ySize).
- */
-static Bool
-xf86AiptekConvert(InputInfoPtr pInfo,
-                  int            first,
-                  int            num,
-                  int            v0,
-                  int            v1,
-                  int            v2,
-                  int            v3,
-                  int            v4,
-                  int            v5,
-                  int*           x,
-                  int*           y)
-{
-    AiptekDevicePtr device = (AiptekDevicePtr) pInfo->private;
-    int  xSize, ySize;
-    int  width, height;
-    ScreenPtr pScreen = miPointerGetScreen(pInfo->dev);
-
-    DBG(15, " xf86AiptekConvert(), with: first=%d, num=%d, v0=%d, "
-		   "v1=%d, v2=%d, v3=%d,, v4=%d, v5=%d, x=%d, y=%d\n",
-		   first, num, v0, v1, v2, v3, v4, v5, *x, *y);
-
-    /* Change the screen number if it differs from that which
-     * the pointer is currently on
-     */
-    if (pScreen->myNum != device->screenNo)
-    {
-        device->screenNo = pScreen->myNum;
-    }
-
-    if (first != 0 || num == 1)
-    {
-        return FALSE;
-    }
-
-    xSize = device->xBottom - device->xTop;
-    ySize = device->yBottom - device->yTop;
-
-    width  = screenInfo.screens[device->screenNo]->width;
-    height = screenInfo.screens[device->screenNo]->height;
-
-    *x = (v0 * width)  / xSize;
-    *y = (v1 * height) / ySize;
-
-    /* Deal with coordinate inversion */
-    if ( device->flags & INVX_FLAG)
-    {
-        *x = width - *x;
-    }
-    if ( device->flags & INVY_FLAG)
-    {
-        *y = height - *y;
-    }
-
-    /* Normalize the adjusted sizes. */
-    if (*x < 0)
-    {
-        *x = 0;
-    }
-    if (*x > width)
-    {
-        *x = width;
-    }
-
-    if (*y < 0)
-    {
-        *y = 0;
-    }
-    if (*y > height)
-    {
-        *y = height;
-    }
-
-    if (device->screenNo != 0)
-    {
-        xf86XInputSetScreen(pInfo, device->screenNo, *x, *y);
-    }
-    DBG(15, "xf86AiptekConvert() exits, with: x=%d, y=%d\n", *x, *y);
-
-    return TRUE;
-}
-
-/*
- * xf86AiptekReverseConvert
- * Convert X and Y to valuators.
- */
-static Bool
-xf86AiptekReverseConvert(InputInfoPtr pInfo,
-                         int            x,
-                         int            y,
-                         int*           valuators)
-{
-    AiptekDevicePtr device = (AiptekDevicePtr) pInfo->private;
-    int    xSize, ySize;
-
-    DBG(15,  "xf86AiptekReverseConvert(), with: x=%d, y=%d, "
-		    "valuators[0]=%d, valuators[1]=%d\n",
-		    x, y, valuators[0], valuators[1] );
-
-    /*
-     * Adjust by tablet ratio
-     */
-    xSize = device->xBottom - device->xTop;
-    ySize = device->yBottom - device->yTop;
-
-    valuators[0] = (x*xSize) / screenInfo.screens[device->screenNo]->width;
-    valuators[1] = (y*ySize) / screenInfo.screens[device->screenNo]->height;
-
-    DBG(15, "converted x,y (%d, %d) to (%d, %d)\n",
-                    x, y, valuators[0], valuators[1] );
-
-    if (device->screenNo != 0)
-    {
-        xf86XInputSetScreen(pInfo,device->screenNo,valuators[0], valuators[1]);
-    }
-    DBG(15, ": xf86AiptekReverseConvert() exits, with: "
-		   "valuators[0]=%d, valuators[1]=%d\n",
-		   valuators[0], valuators[1] );
-
-    return TRUE;
-}
-
 /**********************************************************************
  * xf86AiptekSendEvents
  *  Send events according to the device state.
@@ -1799,10 +1672,7 @@ xf86AiptekAllocate(char* name,
     pInfo->device_control =             xf86AiptekProc;
     pInfo->read_input =                 xf86AiptekHIDReadInput;
     pInfo->control_proc =               xf86AiptekChangeControl;
-    pInfo->close_proc =                 xf86AiptekClose;
     pInfo->switch_mode =                xf86AiptekSwitchMode;
-    pInfo->conversion_proc =            xf86AiptekConvert;
-    pInfo->reverse_conversion_proc =    xf86AiptekReverseConvert;
 
     pInfo->fd =             VALUE_NA;
     pInfo->atom =           0;
