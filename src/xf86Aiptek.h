@@ -82,9 +82,6 @@
 #   include <xf86Module.h>
 #endif
 
-#define XCONFIG_PROBED "(==)"
-#define XCONFIG_GIVEN  "(**)"
-
 #define xf86Verbose 1
 
 #define CURSOR_SECTION_NAME "AiptekCursor"

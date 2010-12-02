@@ -983,15 +983,15 @@ xf86AiptekHIDOpen(InputInfoPtr pInfo)
     }
 
     ioctl(pInfo->fd, EVIOCGNAME(sizeof(name)), name);
-    xf86Msg(X_ERROR, "%s HID Device name: \"%s\"\n", XCONFIG_PROBED, name);
+    xf86Msg(X_PROBED, "HID Device name: \"%s\"\n", name);
 
     ioctl(pInfo->fd, EVIOCGVERSION, &version);
-    xf86Msg(X_ERROR, "%s HID Driver Version: %d.%d.%d\n", XCONFIG_PROBED,
+    xf86Msg(X_PROBED, "HID Driver Version: %d.%d.%d\n",
             version>>16, (version>>8) & 0xff, version & 0xff);
 
-    xf86Msg(X_ERROR, "%s HID Driver knows it has %d devices configured\n", XCONFIG_PROBED,
+    xf86Msg(X_PROBED, "HID Driver knows it has %d devices configured\n",
             common->numDevices);
-    xf86Msg(X_ERROR, "%s HID Driver is using %d as the fd\n", XCONFIG_PROBED, pInfo->fd);
+    xf86Msg(X_PROBED, "HID Driver is using %d as the fd\n", pInfo->fd);
 
     for (i = 0; i < common->numDevices; ++i)
     {
