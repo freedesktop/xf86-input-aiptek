@@ -121,10 +121,8 @@
 #include <string.h>
 #include <math.h>
 
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
 #include <X11/Xatom.h>
 #include <xserver-properties.h>
-#endif
 
 
 static const char identification[] = "$Identification: 0 $";
@@ -175,34 +173,6 @@ static int linux_inputDevice_keyMap[] =
     KEY_OPEN, KEY_PASTE
 };
 
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 7
-/*
- * Function/Macro keys variables.
- *
- * This is a list of X keystrokes the macro keys can send.
- */
-static KeySym aiptek_map[256] =
-{
-    /* 0x00 .. 0x07 */
-    NoSymbol,NoSymbol,NoSymbol,NoSymbol,NoSymbol,NoSymbol,NoSymbol,NoSymbol,
-    /* 0x08 .. 0x0f */
-    XK_F1,  XK_F2,  XK_F3,  XK_F4,  XK_F5,  XK_F6,  XK_F7,  XK_F8,
-    /* 0x10 .. 0x17 */
-    XK_F9,  XK_F10, XK_F11, XK_F12, XK_F13, XK_F14, XK_F15, XK_F16,
-    /* 0x18 .. 0x1f */
-    XK_F17, XK_F18, XK_F19, XK_F20, XK_F21, XK_F22, XK_F23, XK_F24,
-    /* 0x20 .. 0x27 */
-    XK_F25, XK_F26, XK_F27, XK_F28, XK_F29, XK_F30, XK_F31, XK_F32
-};
-
-/* minKeyCode = 8 because this is the min legal key code */
-static KeySymsRec keysyms =
-{
-  /* map        minKeyCode  maxKC   width */
-  aiptek_map,   8,          0xff,   1
-};
-#endif
-
 /*
  * xf86AiptekConvert
  * Convert valuators to X and Y. We deal with multiple X screens, adjusting
@@ -224,11 +194,7 @@ xf86AiptekConvert(InputInfoPtr pInfo,
     AiptekDevicePtr device = (AiptekDevicePtr) pInfo->private;
     int  xSize, ySize;
     int  width, height;
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
-    ScreenPtr pScreen = miPointerCurrentScreen();
-#else
     ScreenPtr pScreen = miPointerGetScreen(pInfo->dev);
-#endif
 
     DBG(15, ErrorF(" xf86AiptekConvert(), with: first=%d, num=%d, v0=%d, "
 		   "v1=%d, v2=%d, v3=%d,, v4=%d, v5=%d, x=%d, y=%d\n",
@@ -345,7 +311,7 @@ xf86AiptekSendEvents(InputInfoPtr pInfo, int r_z)
     AiptekDevicePtr device = (AiptekDevicePtr) pInfo->private;
     AiptekCommonPtr common = device->common;
 
-    int bCorePointer = FALSE, bAbsolute;
+    int bAbsolute;
     int x, y, z, xTilt, yTilt;
 
     if ((DEVICE_ID(device->flags) != common->currentValues.eventType))
@@ -356,9 +322,6 @@ xf86AiptekSendEvents(InputInfoPtr pInfo, int r_z)
     }
 
     bAbsolute    = (device->flags & ABSOLUTE_FLAG);
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
-    bCorePointer = xf86IsCorePointer(pInfo->dev);
-#endif
 
     /*
      * Normalize X and Y coordinates. This includes dealing
@@ -473,13 +436,8 @@ xf86AiptekSendEvents(InputInfoPtr pInfo, int r_z)
     if (common->currentValues.proximity)
     {
         if (!common->previousValues.proximity)
-        {
-            if (!bCorePointer)
-            {
                 xf86PostProximityEvent(pInfo->dev, 1, 0, 5,
                     x, y, z, xTilt, yTilt);
-            }
-        }
 
         if ((bAbsolute &&
              (common->previousValues.x != common->currentValues.x ||
@@ -512,14 +470,9 @@ xf86AiptekSendEvents(InputInfoPtr pInfo, int r_z)
     }
     else
     {
-        if (!bCorePointer)
-        {
-            if (common->previousValues.proximity)
-            {
-                xf86PostProximityEvent(pInfo->dev, 0, 0, 5, x, y, z,
-                        xTilt, yTilt);
-            }
-        }
+        if (common->previousValues.proximity)
+            xf86PostProximityEvent(pInfo->dev, 0, 0, 5, x, y, z,
+                    xTilt, yTilt);
         common->previousValues.proximity = 0;
     }
 }
@@ -1502,9 +1455,7 @@ xf86AiptekOpenDevice(DeviceIntPtr pDriver)
      */
     InitValuatorAxisStruct(pDriver,                 /* X resolution */
                0,                                   /* axis_id */
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
                XIGetKnownProperty(AXIS_LABEL_PROP_ABS_X),
-#endif
                0,                                   /* min value */
                device->xBottom - device->xTop,      /* max value */
                LPI2CPM(375),                        /* resolution */
@@ -1513,9 +1464,7 @@ xf86AiptekOpenDevice(DeviceIntPtr pDriver)
 
     InitValuatorAxisStruct(pDriver,                 /* Y Resolution */
                1,                                   /* axis_id */
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
                XIGetKnownProperty(AXIS_LABEL_PROP_ABS_Y),
-#endif
                0,                                   /* min value */
                device->yBottom - device->yTop,      /* max value */
                LPI2CPM(375),                        /* resolution */
@@ -1524,9 +1473,7 @@ xf86AiptekOpenDevice(DeviceIntPtr pDriver)
 
     InitValuatorAxisStruct(pDriver,                 /* Pressure */
                2,                                   /* axis_id */
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
                XIGetKnownProperty(AXIS_LABEL_PROP_ABS_PRESSURE),
-#endif
                0,                                   /* min value */
                511,                                 /* max value */
                512,                                 /* resolution */
@@ -1535,9 +1482,7 @@ xf86AiptekOpenDevice(DeviceIntPtr pDriver)
 
     InitValuatorAxisStruct(pDriver,                 /* xTilt */
                3,                                   /* axis id */
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
                XIGetKnownProperty(AXIS_LABEL_PROP_ABS_TILT_X),
-#endif
                -128,                                /* min value */
                127,                                 /* max value */
                256,                                 /* resolution */
@@ -1546,9 +1491,7 @@ xf86AiptekOpenDevice(DeviceIntPtr pDriver)
 
     InitValuatorAxisStruct(pDriver,                 /* yTilt */
                4,                                   /* axis_id */
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
                XIGetKnownProperty(AXIS_LABEL_PROP_ABS_TILT_Y),
-#endif
                -128,                                /* min value */
                127,                                 /* max value */
                256,                                 /* resolution */
@@ -1594,10 +1537,8 @@ xf86AiptekProc(DeviceIntPtr pAiptek, int requestCode)
     int             loop;
     InputInfoPtr  pInfo  = (InputInfoPtr)pAiptek->public.devicePrivate;
     AiptekDevicePtr device = pInfo->private;
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
     Atom            btn_labels[numAxes];
     Atom            axes_labels[numButtons];
-#endif
 
     DBG(2, ErrorF("xf86AiptekProc() type=%s flags=%d request=%d\n",
               (DEVICE_ID(device->flags) == STYLUS_ID) ? "stylus" :
@@ -1615,7 +1556,6 @@ xf86AiptekProc(DeviceIntPtr pAiptek, int requestCode)
                 map[loop] = loop;
             }
 
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
             btn_labels[0] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_LEFT);
             btn_labels[1] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_MIDDLE);
             btn_labels[2] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_RIGHT);
@@ -1623,13 +1563,9 @@ xf86AiptekProc(DeviceIntPtr pAiptek, int requestCode)
             btn_labels[4] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_WHEEL_DOWN);
 
             memset(axes_labels, 0, sizeof(axes_labels));
-#endif
 
             if (InitButtonClassDeviceStruct(pAiptek,numButtons,
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
-                        btn_labels,
-#endif
-                        map) == FALSE)
+                                            btn_labels, map) == FALSE)
             {
                 ErrorF("Unable to init Button Class Device\n");
                 return !Success;
@@ -1654,36 +1590,11 @@ xf86AiptekProc(DeviceIntPtr pAiptek, int requestCode)
                 return !Success;
             }
 
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 7
-            if (InitKeyClassDeviceStruct(pAiptek, &keysyms, NULL) ==FALSE)
-            {
-                ErrorF("Unable to init Key Class Device\n");
-                return !Success;
-            }
-
-            if(InitKbdFeedbackClassDeviceStruct(pAiptek,
-                xf86AiptekBellCallback,
-                xf86AiptekKbdCtrlCallback) == FALSE)
-            {
-                ErrorF("Unable to init Keyboard Feedback Class Device\n");
-                return !Success;
-            }
-
-#endif
-
             /* we don't label the axes here, done later in
              * xf86AiptedOpenDevice */
-            if (InitValuatorClassDeviceStruct(pAiptek,
-                   numAxes,
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
-                   axes_labels,
-#endif
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 3
-                   xf86GetMotionEvents,
-#endif
-                   GetMotionHistorySize(),
-                   ((device->flags & ABSOLUTE_FLAG) 
-                        ? Absolute : Relative) | OutOfProximity ) == FALSE)
+            if (InitValuatorClassDeviceStruct(pAiptek, numAxes,
+                                              axes_labels, GetMotionHistorySize(),
+                                              ((device->flags & ABSOLUTE_FLAG) ? Absolute : Relative) | OutOfProximity ) == FALSE)
             {
                 ErrorF("Unable to allocate Valuator Class Device\n");
                 return !Success;
