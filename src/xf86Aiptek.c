@@ -193,7 +193,7 @@ xf86AiptekConvert(InputInfoPtr pInfo,
     int  width, height;
     ScreenPtr pScreen = miPointerGetScreen(pInfo->dev);
 
-    DBG(15, ErrorF(" xf86AiptekConvert(), with: first=%d, num=%d, v0=%d, "
+    DBG(15, xf86Msg(X_ERROR, " xf86AiptekConvert(), with: first=%d, num=%d, v0=%d, "
 		   "v1=%d, v2=%d, v3=%d,, v4=%d, v5=%d, x=%d, y=%d\n",
 		   first, num, v0, v1, v2, v3, v4, v5, *x, *y));
 
@@ -252,7 +252,7 @@ xf86AiptekConvert(InputInfoPtr pInfo,
     {
         xf86XInputSetScreen(pInfo, device->screenNo, *x, *y);
     }
-    DBG(15, ErrorF("xf86AiptekConvert() exits, with: x=%d, y=%d\n",
+    DBG(15, xf86Msg(X_ERROR, "xf86AiptekConvert() exits, with: x=%d, y=%d\n",
 		   *x, *y));
 
     return TRUE;
@@ -271,7 +271,7 @@ xf86AiptekReverseConvert(InputInfoPtr pInfo,
     AiptekDevicePtr device = (AiptekDevicePtr) pInfo->private;
     int    xSize, ySize;
 
-    DBG(15,  ErrorF("xf86AiptekReverseConvert(), with: x=%d, y=%d, "
+    DBG(15,  xf86Msg(X_ERROR, "xf86AiptekReverseConvert(), with: x=%d, y=%d, "
 		    "valuators[0]=%d, valuators[1]=%d\n",
 		    x, y, valuators[0], valuators[1] ));
 
@@ -284,14 +284,14 @@ xf86AiptekReverseConvert(InputInfoPtr pInfo,
     valuators[0] = (x*xSize) / screenInfo.screens[device->screenNo]->width;
     valuators[1] = (y*ySize) / screenInfo.screens[device->screenNo]->height;
 
-    DBG(15, ErrorF("converted x,y (%d, %d) to (%d, %d)\n",
+    DBG(15, xf86Msg(X_ERROR, "converted x,y (%d, %d) to (%d, %d)\n",
                     x, y, valuators[0], valuators[1] ));
 
     if (device->screenNo != 0)
     {
         xf86XInputSetScreen(pInfo,device->screenNo,valuators[0], valuators[1]);
     }
-    DBG(15, ErrorF(": xf86AiptekReverseConvert() exits, with: "
+    DBG(15, xf86Msg(X_ERROR, ": xf86AiptekReverseConvert() exits, with: "
 		   "valuators[0]=%d, valuators[1]=%d\n",
 		   valuators[0], valuators[1] ));
 
@@ -313,7 +313,7 @@ xf86AiptekSendEvents(InputInfoPtr pInfo, int r_z)
 
     if ((DEVICE_ID(device->flags) != common->currentValues.eventType))
     {
-        DBG(7,ErrorF("xf86AiptekSendEvents: not the same device type (%u,%u)\n",
+        DBG(7,xf86Msg(X_ERROR, "xf86AiptekSendEvents: not the same device type (%u,%u)\n",
            DEVICE_ID(device->flags), common->currentValues.eventType));
         return;
     }
@@ -340,12 +340,12 @@ xf86AiptekSendEvents(InputInfoPtr pInfo, int r_z)
         }
 
 	if (device->xTop > 0) {
-	    DBG(10, ErrorF("Adjusting x, with xTop=%d\n", device->xTop));
+	    DBG(10, xf86Msg(X_ERROR, "Adjusting x, with xTop=%d\n", device->xTop));
 	    x -= device->xTop;
 	}
 
 	if (device->yTop > 0) {
-	    DBG(10, ErrorF("Adjusting y, with yTop=%d\n", device->yTop));
+	    DBG(10, xf86Msg(X_ERROR, "Adjusting y, with yTop=%d\n", device->yTop));
 	    y -= device->yTop;
 	}
 
@@ -497,7 +497,7 @@ xf86AiptekHIDReadInput(InputInfoPtr pInfo)
 
     if (len <= 0)
     {
-        ErrorF("Error reading Aiptek tablet: %s\n", strerror(errno));
+        xf86Msg(X_ERROR, "Error reading Aiptek tablet: %s\n", strerror(errno));
         return;
     }
 
@@ -884,7 +884,7 @@ xf86AiptekHIDReadInput(InputInfoPtr pInfo)
             common->currentValues.macroKey ==
                     common->previousValues.macroKey)
         {
-            DBG(10, ErrorF("Event Filtered Out by Thresholds\n"));
+            DBG(10, xf86Msg(X_ERROR, "Event Filtered Out by Thresholds\n"));
             continue;
         }
 
@@ -979,20 +979,20 @@ xf86AiptekHIDOpen(InputInfoPtr pInfo)
     pInfo->fd = xf86OpenSerial(pInfo->options);
     if (pInfo->fd == -1)
     {
-        ErrorF("xf86AiptekHIDOpen Error opening %s : %s\n", common->deviceName, strerror(errno));
+        xf86Msg(X_ERROR, "xf86AiptekHIDOpen Error opening %s : %s\n", common->deviceName, strerror(errno));
         return !Success;
     }
 
     ioctl(pInfo->fd, EVIOCGNAME(sizeof(name)), name);
-    ErrorF("%s HID Device name: \"%s\"\n", XCONFIG_PROBED, name);
+    xf86Msg(X_ERROR, "%s HID Device name: \"%s\"\n", XCONFIG_PROBED, name);
 
     ioctl(pInfo->fd, EVIOCGVERSION, &version);
-    ErrorF("%s HID Driver Version: %d.%d.%d\n", XCONFIG_PROBED,
+    xf86Msg(X_ERROR, "%s HID Driver Version: %d.%d.%d\n", XCONFIG_PROBED,
             version>>16, (version>>8) & 0xff, version & 0xff);
 
-    ErrorF("%s HID Driver knows it has %d devices configured\n", XCONFIG_PROBED,
+    xf86Msg(X_ERROR, "%s HID Driver knows it has %d devices configured\n", XCONFIG_PROBED,
             common->numDevices);
-    ErrorF("%s HID Driver is using %d as the fd\n", XCONFIG_PROBED, pInfo->fd);
+    xf86Msg(X_ERROR, "%s HID Driver is using %d as the fd\n", XCONFIG_PROBED, pInfo->fd);
 
     for (i = 0; i < common->numDevices; ++i)
     {
@@ -1021,21 +1021,21 @@ xf86AiptekHIDOpen(InputInfoPtr pInfo)
                         {
                             case ABS_X:
                             {
-                                ErrorF("From ioctl() xCapacity=%d\n", abs[2]);
+                                xf86Msg(X_ERROR, "From ioctl() xCapacity=%d\n", abs[2]);
                                 common->xCapacity = abs[2];
                             }
                             break;
 
                             case ABS_Y:
                             {
-                                ErrorF("From ioctl() yCapacity=%d\n", abs[2]);
+                                xf86Msg(X_ERROR, "From ioctl() yCapacity=%d\n", abs[2]);
                                 common->yCapacity = abs[2];
                             }
                             break;
 
                             case ABS_Z:
                             {
-                                ErrorF("From ioctl() zCapacity=%d\n", abs[2]);
+                                xf86Msg(X_ERROR, "From ioctl() zCapacity=%d\n", abs[2]);
                                 common->zCapacity = abs[2];
                             }
                             break;
@@ -1048,7 +1048,7 @@ xf86AiptekHIDOpen(InputInfoPtr pInfo)
 
     if (err < 0)
     {
-        ErrorF("xf86AiptekHIDOpen ERROR: %d\n", err);
+        xf86Msg(X_ERROR, "xf86AiptekHIDOpen ERROR: %d\n", err);
         SYSCALL(close(pInfo->fd));
         return !Success;
     }
@@ -1062,7 +1062,7 @@ xf86AiptekHIDOpen(InputInfoPtr pInfo)
 static void
 xf86AiptekControlProc(DeviceIntPtr device, PtrCtrl *ctrl)
 {
-    DBG(2, ErrorF("xf86AiptekControlProc\n"));
+    DBG(2, xf86Msg(X_ERROR, "xf86AiptekControlProc\n"));
 }
 
 /*
@@ -1078,16 +1078,16 @@ xf86AiptekOpen(InputInfoPtr pInfo)
     AiptekCommonPtr common = device->common;
     int err, version;
 
-    DBG(1, ErrorF("Opening %s\n", common->deviceName));
+    DBG(1, xf86Msg(X_ERROR, "Opening %s\n", common->deviceName));
 
     pInfo->fd = xf86OpenSerial(pInfo->options);
     if (pInfo->fd < 0)
     {
-        ErrorF("Error opening %s: %s\n", common->deviceName, strerror(errno));
+        xf86Msg(X_ERROR, "Error opening %s: %s\n", common->deviceName, strerror(errno));
         return !Success;
     }
 
-    DBG(1, ErrorF("Testing USB\n"));
+    DBG(1, xf86Msg(X_ERROR, "Testing USB\n"));
 
     SYSCALL(err = ioctl(pInfo->fd, EVIOCGVERSION, &version));
     if (!err)
@@ -1123,7 +1123,7 @@ xf86AiptekOpenDevice(DeviceIntPtr pDriver)
     double            xFactor, yFactor;
     int               gap, loop;
 
-    DBG(2, ErrorF("In xf86AiptekOpenDevice, with fd=%d\n", pInfo->fd));
+    DBG(2, xf86Msg(X_ERROR, "In xf86AiptekOpenDevice, with fd=%d\n", pInfo->fd));
 
     if (pInfo->fd < 0)
     {
@@ -1393,7 +1393,7 @@ xf86AiptekOpenDevice(DeviceIntPtr pDriver)
         screenRatio = (double) screenInfo.screens[device->screenNo]->width /
                       (double) screenInfo.screens[device->screenNo]->height;
 
-        DBG(2, ErrorF("Screen %d: screenRatio = %.3g, tabletRatio = %.3g\n",
+        DBG(2, xf86Msg(X_ERROR, "Screen %d: screenRatio = %.3g, tabletRatio = %.3g\n",
                   device->screenNo, screenRatio, tabletRatio));
 
         if (screenRatio > tabletRatio)
@@ -1402,7 +1402,7 @@ xf86AiptekOpenDevice(DeviceIntPtr pDriver)
                        (1.0 - tabletRatio/screenRatio));
             device->xBottom = common->xCapacity;
             device->yBottom = common->yCapacity - gap;
-            DBG(2, ErrorF("Screen %d: 'Y' Gap of %d computed\n",
+            DBG(2, xf86Msg(X_ERROR, "Screen %d: 'Y' Gap of %d computed\n",
                   device->screenNo, gap));
         }
         else
@@ -1411,7 +1411,7 @@ xf86AiptekOpenDevice(DeviceIntPtr pDriver)
                        (1.0 - screenRatio/tabletRatio));
             device->xBottom = common->xCapacity - gap;
             device->yBottom = common->yCapacity;
-            DBG(2, ErrorF("Screen %d: 'X' Gap of %d computed\n",
+            DBG(2, xf86Msg(X_ERROR, "Screen %d: 'X' Gap of %d computed\n",
                   device->screenNo, gap));
         }
     }
@@ -1537,7 +1537,7 @@ xf86AiptekProc(DeviceIntPtr pAiptek, int requestCode)
     Atom            btn_labels[numAxes];
     Atom            axes_labels[numButtons];
 
-    DBG(2, ErrorF("xf86AiptekProc() type=%s flags=%d request=%d\n",
+    DBG(2, xf86Msg(X_ERROR, "xf86AiptekProc() type=%s flags=%d request=%d\n",
               (DEVICE_ID(device->flags) == STYLUS_ID) ? "stylus" :
               (DEVICE_ID(device->flags) == CURSOR_ID) ? "cursor" : "eraser",
               device->flags, requestCode));
@@ -1546,7 +1546,7 @@ xf86AiptekProc(DeviceIntPtr pAiptek, int requestCode)
     {
         case DEVICE_INIT:
         {
-            DBG(1, ErrorF("xf86AiptekProc request=INIT\n"));
+            DBG(1, xf86Msg(X_ERROR, "xf86AiptekProc request=INIT\n"));
 
             for(loop=1; loop<=numButtons; ++loop)
             {
@@ -1564,26 +1564,26 @@ xf86AiptekProc(DeviceIntPtr pAiptek, int requestCode)
             if (InitButtonClassDeviceStruct(pAiptek,numButtons,
                                             btn_labels, map) == FALSE)
             {
-                ErrorF("Unable to init Button Class Device\n");
+                xf86Msg(X_ERROR, "Unable to init Button Class Device\n");
                 return !Success;
             }
 
             if (InitFocusClassDeviceStruct(pAiptek) == FALSE) 
             {
-                ErrorF("Unable to init Focus Class Device\n");
+                xf86Msg(X_ERROR, "Unable to init Focus Class Device\n");
                 return !Success;
             }
 
             if (InitPtrFeedbackClassDeviceStruct(pAiptek,
                         xf86AiptekControlProc) == FALSE)
             {
-                ErrorF("Unable to init Pointer Feedback Class Device\n");
+                xf86Msg(X_ERROR, "Unable to init Pointer Feedback Class Device\n");
                 return !Success;
             }
 
             if (InitProximityClassDeviceStruct(pAiptek) == FALSE)
             {
-                ErrorF("Unable to init Proximity Class Device\n");
+                xf86Msg(X_ERROR, "Unable to init Proximity Class Device\n");
                 return !Success;
             }
 
@@ -1593,7 +1593,7 @@ xf86AiptekProc(DeviceIntPtr pAiptek, int requestCode)
                                               axes_labels, GetMotionHistorySize(),
                                               ((device->flags & ABSOLUTE_FLAG) ? Absolute : Relative) | OutOfProximity ) == FALSE)
             {
-                ErrorF("Unable to allocate Valuator Class Device\n");
+                xf86Msg(X_ERROR, "Unable to allocate Valuator Class Device\n");
                 return !Success;
             }
 
@@ -1607,15 +1607,15 @@ xf86AiptekProc(DeviceIntPtr pAiptek, int requestCode)
 
         case DEVICE_ON:
         {
-            DBG(1, ErrorF("xf86AiptekProc request=ON\n"));
+            DBG(1, xf86Msg(X_ERROR, "xf86AiptekProc request=ON\n"));
 
             if ((pInfo->fd < 0) &&
                 (!xf86AiptekOpenDevice(pAiptek)))
             {
-                ErrorF("Unable to open aiptek device\n");
+                xf86Msg(X_ERROR, "Unable to open aiptek device\n");
                 return !Success;
             }
-            ErrorF("Able to open aiptek device\n");
+            xf86Msg(X_ERROR, "Able to open aiptek device\n");
             xf86AddEnabledDevice(pInfo);
             pAiptek->public.on = TRUE;
         }
@@ -1623,7 +1623,7 @@ xf86AiptekProc(DeviceIntPtr pAiptek, int requestCode)
 
         case DEVICE_OFF:
         {
-	    DBG(1, ErrorF("xf86AiptekProc request=OFF\n"));
+	    DBG(1, xf86Msg(X_ERROR, "xf86AiptekProc request=OFF\n"));
             if (pInfo->fd >= 0)
             {
                 xf86RemoveEnabledDevice(pInfo);
@@ -1635,19 +1635,19 @@ xf86AiptekProc(DeviceIntPtr pAiptek, int requestCode)
 
         case DEVICE_CLOSE:
         {
-  	    DBG(1, ErrorF("xf86AiptekProc request=CLOSE\n"));
+	    DBG(1, xf86Msg(X_ERROR, "xf86AiptekProc request=CLOSE\n"));
             xf86AiptekClose(pInfo);
         }
         break;
 
         default:
         {
-            ErrorF("xf86AiptekProc - Unsupported mode=%d\n", requestCode);
+            xf86Msg(X_ERROR, "xf86AiptekProc - Unsupported mode=%d\n", requestCode);
             return !Success;
         }
         break;
     }
-    DBG(2, ErrorF("xf86AiptekProc Success request=%d\n", requestCode ));
+    DBG(2, xf86Msg(X_ERROR, "xf86AiptekProc Success request=%d\n", requestCode ));
     return Success;
 }
 
@@ -1680,20 +1680,20 @@ xf86AiptekChangeControl(InputInfoPtr pInfo, xDeviceCtl *control)
     xDeviceResolutionCtl    *res;
     int                     *resolutions;
 
-    DBG(3, ErrorF("xf86AiptekChangeControl() entered\n"));
+    DBG(3, xf86Msg(X_ERROR, "xf86AiptekChangeControl() entered\n"));
 
     res = (xDeviceResolutionCtl *)control;
     
     if ((control->control != DEVICE_RESOLUTION) ||
         (res->num_valuators < 1))
     {
-        DBG(3, ErrorF("xf86AiptekChangeControl abends\n"));
+        DBG(3, xf86Msg(X_ERROR, "xf86AiptekChangeControl abends\n"));
         return (BadMatch);
     }
 
     resolutions = (int *)(res +1);
     
-    DBG(3, ErrorF("xf86AiptekChangeControl changing to res %d\n",
+    DBG(3, xf86Msg(X_ERROR, "xf86AiptekChangeControl changing to res %d\n",
               resolutions[0]));
 
     /* We don't know how to write, yet
@@ -1716,7 +1716,7 @@ xf86AiptekSwitchMode(ClientPtr client, DeviceIntPtr dev, int mode)
     InputInfoPtr  pInfo  = (InputInfoPtr)dev->public.devicePrivate;
     AiptekDevicePtr device = (AiptekDevicePtr)(pInfo->private);
 
-    DBG(3, ErrorF("xf86AiptekSwitchMode() dev=%p mode=%d\n", dev, mode));
+    DBG(3, xf86Msg(X_ERROR, "xf86AiptekSwitchMode() dev=%p mode=%d\n", dev, mode));
 
     switch(mode)
     {
@@ -1734,7 +1734,7 @@ xf86AiptekSwitchMode(ClientPtr client, DeviceIntPtr dev, int mode)
 
         default:
         {
-            DBG(1, ErrorF("xf86AiptekSwitchMode dev=%p invalid mode=%d\n",
+            DBG(1, xf86Msg(X_ERROR, "xf86AiptekSwitchMode dev=%p invalid mode=%d\n",
                    dev, mode));
             return BadMatch;
         }
@@ -1757,19 +1757,19 @@ xf86AiptekAllocate(char* name,
     AiptekDevicePtr   device;
     AiptekCommonPtr   common;
 
-    DBG(3, ErrorF("xf86AiptekAllocate, with %s and %d\n", name, flag));
+    DBG(3, xf86Msg(X_ERROR, "xf86AiptekAllocate, with %s and %d\n", name, flag));
 
     device = (AiptekDevicePtr) malloc(sizeof(AiptekDeviceRec));
     if (!device)
     {
-        DBG(3, ErrorF("xf86AiptekAllocate failed to allocate 'device'\n"));
+        DBG(3, xf86Msg(X_ERROR, "xf86AiptekAllocate failed to allocate 'device'\n"));
         return NULL;
     }
 
     common = (AiptekCommonPtr) malloc(sizeof(AiptekCommonRec));
     if (!common)
     {
-        DBG(3, ErrorF("xf86AiptekAllocate failed to allocate 'common'\n"));
+        DBG(3, xf86Msg(X_ERROR, "xf86AiptekAllocate failed to allocate 'common'\n"));
         free(device);
         return NULL;
     }
@@ -1777,7 +1777,7 @@ xf86AiptekAllocate(char* name,
     deviceArray = (InputInfoPtr*) malloc(sizeof(InputInfoPtr));
     if (!deviceArray)
     {
-        DBG(3, ErrorF("xf86AiptekAllocate failed to allocate 'deviceArray'\n"));
+        DBG(3, xf86Msg(X_ERROR, "xf86AiptekAllocate failed to allocate 'deviceArray'\n"));
         free(device);
         free(common);
         return NULL;
@@ -1787,7 +1787,7 @@ xf86AiptekAllocate(char* name,
     pInfo = xf86AllocateInput(aiptekDrv, 0);
     if (!pInfo)
     {
-        DBG(3, ErrorF("xf86AiptekAllocate failed at xf86AllocateInput()\n"));
+        DBG(3, xf86Msg(X_ERROR, "xf86AiptekAllocate failed at xf86AllocateInput()\n"));
         free(device);
         free(common);
         free(deviceArray);
@@ -1965,7 +1965,7 @@ xf86AiptekUninit(InputDriverPtr    drv,
 {
     AiptekDevicePtr device = (AiptekDevicePtr) pInfo->private;
 
-    DBG(1, ErrorF("xf86AiptekUninit\n"));
+    DBG(1, xf86Msg(X_ERROR, "xf86AiptekUninit\n"));
 
     xf86AiptekProc(pInfo->dev, DEVICE_OFF);
 
@@ -2186,7 +2186,7 @@ xf86AiptekInit(InputDriverPtr    drv,
 #else
     if (xf86SetBoolOption(pInfo->options, "USB", 0))
     {
-        ErrorF("The Aiptek USB driver isn't available for your platform.\n");
+        xf86Msg(X_ERROR, "The Aiptek USB driver isn't available for your platform.\n");
         goto SetupProc_fail;
     }
 #endif
@@ -2447,7 +2447,7 @@ SetupProc_fail:
 static void
 xf86AiptekUnplug(pointer p)
 {
-    DBG(1, ErrorF("xf86AiptekUnplug\n"));
+    DBG(1, xf86Msg(X_ERROR, "xf86AiptekUnplug\n"));
 }
 
 /*
@@ -2461,7 +2461,7 @@ xf86AiptekPlug(pointer    module,
                int*       errmaj,
                int*       errmin)
 {
-    DBG(1, ErrorF("xf86AiptekPlug\n"));
+    DBG(1, xf86Msg(X_ERROR, "xf86AiptekPlug\n"));
 
     xf86AddInputDriver(&AIPTEK, module, 0);
 
