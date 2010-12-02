@@ -124,8 +124,6 @@
 #include <X11/Xatom.h>
 #include <xserver-properties.h>
 
-
-static const char identification[] = "$Identification: 0 $";
 static InputDriverPtr aiptekDrv;
 static int debug_level = INI_DEBUG_LEVEL;
 
