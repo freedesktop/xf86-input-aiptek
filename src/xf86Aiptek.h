@@ -130,9 +130,9 @@
 
 #define DEBUG 1
 #if DEBUG
-#   define     DBG(lvl, f)     {if ((lvl) <= debug_level) f;}
+#   define     DBG(lvl, ...)     {if ((lvl) <= debug_level) xf86Msg(X_INFO, __VA_ARGS__);}
 #else
-#   define     DBG(lvl, f)
+#   define     DBG(lvl, ...)
 #endif
 
 /******************************************************************************
