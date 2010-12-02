@@ -2055,7 +2055,7 @@ xf86AiptekInit(InputDriverPtr    drv,
     common->deviceName = xf86FindOptionValue(pInfo->options, "Device");
     if(!common->deviceName)
     {
-        xf86Msg(X_ERROR, "%s: No Device specified.\n", dev->identifier);
+        xf86Msg(X_ERROR, "%s: No Device specified.\n", pInfo->name);
         goto SetupProc_fail;
     }
 
@@ -2116,7 +2116,7 @@ xf86AiptekInit(InputDriverPtr    drv,
     }
 
     /* Optional configuration */
-    xf86Msg(X_CONFIG, "%s device is %s\n", dev->identifier,
+    xf86Msg(X_CONFIG, "%s device is %s\n", pInfo->name,
             common->deviceName);
 
 /* DebugLevel */
@@ -2143,7 +2143,7 @@ xf86AiptekInit(InputDriverPtr    drv,
     else if (s)
     {
         xf86Msg(X_ERROR, "%s: invalid Mode ('normal', 'soft' or 'hard').\n",
-            dev->identifier);
+            pInfo->name);
     }
 
 /* Mode */
@@ -2159,7 +2159,7 @@ xf86AiptekInit(InputDriverPtr    drv,
     else if (s)
     {
         xf86Msg(X_ERROR, "%s: invalid Mode ('absolute' or 'relative').\n",
-            dev->identifier);
+            pInfo->name);
         device->flags |= ABSOLUTE_FLAG;
     }
     xf86Msg(X_CONFIG, "%s is in %s mode\n", pInfo->name,
@@ -2180,7 +2180,7 @@ xf86AiptekInit(InputDriverPtr    drv,
     {
         pInfo->read_input=xf86AiptekHIDReadInput;
         common->open=xf86AiptekHIDOpen;
-        xf86Msg(X_CONFIG, "%s: reading USB link\n", dev->identifier);
+        xf86Msg(X_CONFIG, "%s: reading USB link\n", pInfo->name);
     }
 #else
     if (xf86SetBoolOption(pInfo->options, "USB", 0))
@@ -2195,14 +2195,14 @@ xf86AiptekInit(InputDriverPtr    drv,
     if (device->screenNo != VALUE_NA)
     {
         xf86Msg(X_CONFIG, "%s: attached to screen number %d\n",
-                dev->identifier, device->screenNo);
+                pInfo->name, device->screenNo);
     }
 
 /* KeepShape */
     if (xf86SetBoolOption(pInfo->options, "KeepShape", 0))
     {
         device->flags |= KEEP_SHAPE_FLAG;
-        xf86Msg(X_CONFIG, "%s: keeps shape\n", dev->identifier);
+        xf86Msg(X_CONFIG, "%s: keeps shape\n", pInfo->name);
     }
 
 /* XSize */
@@ -2210,7 +2210,7 @@ xf86AiptekInit(InputDriverPtr    drv,
     device->xSize = xf86SetIntOption(pInfo->options, "SizeX", device->xSize);
     if (device->xSize != VALUE_NA) 
     {
-        xf86Msg(X_CONFIG, "%s: XSize/SizeX = %d\n", dev->identifier,
+        xf86Msg(X_CONFIG, "%s: XSize/SizeX = %d\n", pInfo->name,
                 device->xSize);
     }
 
@@ -2219,7 +2219,7 @@ xf86AiptekInit(InputDriverPtr    drv,
     device->ySize = xf86SetIntOption(pInfo->options, "SizeY", device->ySize);
     if (device->ySize != VALUE_NA) 
     {
-        xf86Msg(X_CONFIG, "%s: YSize/SizeY = %d\n", dev->identifier,
+        xf86Msg(X_CONFIG, "%s: YSize/SizeY = %d\n", pInfo->name,
                 device->ySize);
     }
 
@@ -2230,7 +2230,7 @@ xf86AiptekInit(InputDriverPtr    drv,
             device->xOffset);
     if (device->xOffset != VALUE_NA)
     {
-        xf86Msg(X_CONFIG, "%s: XOffset/OffsetX = %d\n", dev->identifier,
+        xf86Msg(X_CONFIG, "%s: XOffset/OffsetX = %d\n", pInfo->name,
                 device->xOffset);
     }
 
@@ -2241,7 +2241,7 @@ xf86AiptekInit(InputDriverPtr    drv,
             device->yOffset);
     if (device->yOffset != VALUE_NA)
     {
-        xf86Msg(X_CONFIG, "%s: YOffset/OffsetY = %d\n", dev->identifier,
+        xf86Msg(X_CONFIG, "%s: YOffset/OffsetY = %d\n", pInfo->name,
                 device->yOffset);
     }
 
@@ -2253,7 +2253,7 @@ xf86AiptekInit(InputDriverPtr    drv,
     if (device->xThreshold != VALUE_NA)
     {
         xf86Msg(X_CONFIG, "%s: XThreshold/ThresholdX = %d\n",
-                dev->identifier, device->xThreshold);
+                pInfo->name, device->xThreshold);
     }
 
 /* YThreshold */
@@ -2264,7 +2264,7 @@ xf86AiptekInit(InputDriverPtr    drv,
     if (device->yThreshold != VALUE_NA)
     {
         xf86Msg(X_CONFIG, "%s: YThreshold/ThresholdY = %d\n",
-                dev->identifier, device->yThreshold);
+                pInfo->name, device->yThreshold);
     }
 
 /* ZThreshold */
@@ -2275,7 +2275,7 @@ xf86AiptekInit(InputDriverPtr    drv,
     if (device->zThreshold != VALUE_NA)
     {
         xf86Msg(X_CONFIG, "%s: ZThreshold/ThresholdZ = %d\n",
-                dev->identifier, device->zThreshold);
+                pInfo->name, device->zThreshold);
     }
 
 /* XTiltThreshold */
@@ -2286,7 +2286,7 @@ xf86AiptekInit(InputDriverPtr    drv,
     if (device->xTiltThreshold != VALUE_NA)
     {
         xf86Msg(X_CONFIG, "%s: XTiltThreshold = %d\n",
-                dev->identifier, device->xTiltThreshold);
+                pInfo->name, device->xTiltThreshold);
     }
 
 /* YTiltThreshold */
@@ -2297,7 +2297,7 @@ xf86AiptekInit(InputDriverPtr    drv,
     if (device->yTiltThreshold != VALUE_NA)
     {
         xf86Msg(X_CONFIG, "%s: YTiltThreshold = %d\n",
-                dev->identifier, device->yTiltThreshold);
+                pInfo->name, device->yTiltThreshold);
     }
 
 /* XMax */
@@ -2305,7 +2305,7 @@ xf86AiptekInit(InputDriverPtr    drv,
     device->xMax = xf86SetIntOption(pInfo->options, "MaxX", device->xMax);
     if (device->xMax != VALUE_NA)
     {
-        xf86Msg(X_CONFIG, "%s: XMax/MaxX = %d\n", dev->identifier,
+        xf86Msg(X_CONFIG, "%s: XMax/MaxX = %d\n", pInfo->name,
                 device->xMax);
     }
 
@@ -2314,7 +2314,7 @@ xf86AiptekInit(InputDriverPtr    drv,
     device->yMax = xf86SetIntOption(pInfo->options, "MaxY", device->yMax);
     if (device->yMax != VALUE_NA)
     {
-        xf86Msg(X_CONFIG, "%s: YMax/MaxY = %d\n", dev->identifier,
+        xf86Msg(X_CONFIG, "%s: YMax/MaxY = %d\n", pInfo->name,
                 device->yMax);
     }
 
@@ -2323,7 +2323,7 @@ xf86AiptekInit(InputDriverPtr    drv,
     device->zMax = xf86SetIntOption(pInfo->options, "MaxZ", device->zMax);
     if (device->zMax != VALUE_NA)
     {
-        xf86Msg(X_CONFIG, "%s: ZMax/MaxZ = %d\n", dev->identifier,
+        xf86Msg(X_CONFIG, "%s: ZMax/MaxZ = %d\n", pInfo->name,
                 device->zMax);
     }
 
@@ -2332,7 +2332,7 @@ xf86AiptekInit(InputDriverPtr    drv,
     device->zMin = xf86SetIntOption(pInfo->options, "MinZ", device->zMin);
     if (device->zMin != VALUE_NA)
     {
-        xf86Msg(X_CONFIG, "%s: ZMin/MinZ = %d\n", dev->identifier,
+        xf86Msg(X_CONFIG, "%s: ZMin/MinZ = %d\n", pInfo->name,
                 device->zMin);
     }
 
@@ -2341,7 +2341,7 @@ xf86AiptekInit(InputDriverPtr    drv,
     device->xTop = xf86SetIntOption(pInfo->options, "XTop", device->xTop);
     if (device->xTop != VALUE_NA)
     {
-        xf86Msg(X_CONFIG, "%s: TopX/XTop = %d\n", dev->identifier,
+        xf86Msg(X_CONFIG, "%s: TopX/XTop = %d\n", pInfo->name,
                 device->xTop);
     }
 
@@ -2350,7 +2350,7 @@ xf86AiptekInit(InputDriverPtr    drv,
     device->yTop = xf86SetIntOption(pInfo->options, "YTop", device->yTop);
     if (device->yTop != VALUE_NA)
     {
-        xf86Msg(X_CONFIG, "%s: TopY/YTop = %d\n", dev->identifier,
+        xf86Msg(X_CONFIG, "%s: TopY/YTop = %d\n", pInfo->name,
                 device->yTop);
     }
 
@@ -2361,7 +2361,7 @@ xf86AiptekInit(InputDriverPtr    drv,
             device->xBottom);
     if (device->xBottom != VALUE_NA)
     {
-        xf86Msg(X_CONFIG, "%s: BottomX/XBottom = %d\n", dev->identifier,
+        xf86Msg(X_CONFIG, "%s: BottomX/XBottom = %d\n", pInfo->name,
                 device->xBottom);
     }
 
@@ -2372,7 +2372,7 @@ xf86AiptekInit(InputDriverPtr    drv,
             device->yBottom);
     if (device->yBottom != VALUE_NA)
     {
-        xf86Msg(X_CONFIG, "%s: BottomY/YBottom = %d\n", dev->identifier,
+        xf86Msg(X_CONFIG, "%s: BottomY/YBottom = %d\n", pInfo->name,
                 device->yBottom);
     }
 
@@ -2380,14 +2380,14 @@ xf86AiptekInit(InputDriverPtr    drv,
     if (xf86SetBoolOption(pInfo->options, "InvX", FALSE))
     {
         device->flags |= INVX_FLAG;
-        xf86Msg(X_CONFIG, "%s: InvX\n", dev->identifier);
+        xf86Msg(X_CONFIG, "%s: InvX\n", pInfo->name);
     }
 
 /* InvY */
     if (xf86SetBoolOption(pInfo->options, "InvY", FALSE))
     {
         device->flags |= INVY_FLAG;
-        xf86Msg(X_CONFIG, "%s: InvY\n", dev->identifier);
+        xf86Msg(X_CONFIG, "%s: InvY\n", pInfo->name);
     }
 
 /* BaudRate */
@@ -2403,12 +2403,12 @@ xf86AiptekInit(InputDriverPtr    drv,
                 break;
             default:
                 xf86Msg(X_ERROR, "%s: Illegal BaudRate (9600 or 19200).",
-                        dev->identifier);
+                        pInfo->name);
                 break;
         }
-        xf86Msg(X_CONFIG, "%s: BaudRate %u\n", dev->identifier, val);
+        xf86Msg(X_CONFIG, "%s: BaudRate %u\n", pInfo->name, val);
     }
-    xf86Msg(X_CONFIG, "%s: xf86AiptekInit() finished\n", dev->identifier);
+    xf86Msg(X_CONFIG, "%s: xf86AiptekInit() finished\n", pInfo->name);
 
     /* Mark the device as configured */
     pInfo->flags |= XI86_CONFIGURED;
