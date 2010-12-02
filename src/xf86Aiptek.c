@@ -147,7 +147,6 @@ _X_EXPORT InputDriverRec AIPTEK =
     xf86AiptekInit,     /* pre-init */
     xf86AiptekUninit,   /* un-init */
     NULL,               /* module */
-    0                   /* ref count */
 };
 
 /*
