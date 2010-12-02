@@ -1376,23 +1376,6 @@ xf86AiptekOpenDevice(DeviceIntPtr pDriver)
 }
 
 /*
- * xf86AiptekBellCallback
- */
-static void
-xf86AiptekBellCallback(int pct, DeviceIntPtr di, pointer ctrl, int x)
-{
-}
-
-/*
- * xf86AiptekKbdCtrlCallback
- */
-static void
-xf86AiptekKbdCtrlCallback(DeviceIntPtr di, KeybdCtrl* ctrl)
-{
-}
-
-
-/*
  * xf86AiptekProc
  *
  *  Call dispatcher for this driver.
