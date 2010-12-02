@@ -60,11 +60,6 @@
 #include <xorg-server.h>
 #include <xorgVersion.h>
 
-#ifndef XFree86LOADER
-#   include <unistd.h>
-#   include <errno.h>
-#endif
-
 #include <misc.h>
 #include <xf86.h>
 
@@ -78,9 +73,7 @@
 #include <X11/keysym.h>
 #include <mipointer.h>
 
-#ifdef XFree86LOADER
-#   include <xf86Module.h>
-#endif
+#include <xf86Module.h>
 
 #define CURSOR_SECTION_NAME "AiptekCursor"
 #define STYLUS_SECTION_NAME "AiptekStylus"

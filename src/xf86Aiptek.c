@@ -2433,7 +2433,6 @@ SetupProc_fail:
  *
  ***************************************************************************
  */
-#ifdef XFree86LOADER
 /*
  * xf86AiptekUnplug --
  *
@@ -2485,7 +2484,5 @@ _X_EXPORT XF86ModuleData aiptekModuleData =
     xf86AiptekPlug,
     xf86AiptekUnplug
 };
-
-#endif /* XFree86LOADER */
 
 /* end of xf86Aiptek.c */
