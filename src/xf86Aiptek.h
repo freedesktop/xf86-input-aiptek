@@ -347,12 +347,12 @@ typedef struct _AiptekCommonRec
     Bool (*open)(InputInfoPtr);   /* function to open (serial or USB) */
 } AiptekCommonRec, *AiptekCommonPtr;
 
-static InputInfoPtr xf86AiptekInit(InputDriverPtr, IDevPtr, int);
+static int xf86AiptekInit(InputDriverPtr, InputInfoPtr, int);
 static void xf86AiptekUninit(InputDriverPtr, InputInfoPtr, int);
 static void xf86AiptekClose(InputInfoPtr);
-static InputInfoPtr xf86AiptekAllocateStylus(void);
-static InputInfoPtr xf86AiptekAllocateCursor(void);
-static InputInfoPtr xf86AiptekAllocateEraser(void);
+static int xf86AiptekAllocateStylus(InputInfoPtr);
+static int xf86AiptekAllocateCursor(InputInfoPtr);
+static int xf86AiptekAllocateEraser(InputInfoPtr);
 
 #define SYSCALL(call) while(((call) == -1) && (errno == EINTR))
 #define ABS(x) ((x) > 0 ? (x) : -(x))

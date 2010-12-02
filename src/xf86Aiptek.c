@@ -124,10 +124,14 @@
 #include <X11/Xatom.h>
 #include <xserver-properties.h>
 
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 12
+#error "Need a server with input ABI 12"
+#endif
+
 static InputDriverPtr aiptekDrv;
 static int debug_level = INI_DEBUG_LEVEL;
 
-static const char *default_options[] =
+static char *default_options[] =
 {
     "BaudRate",     "9600",
     "StopBits",     "1",
@@ -147,6 +151,7 @@ _X_EXPORT InputDriverRec AIPTEK =
     xf86AiptekInit,     /* pre-init */
     xf86AiptekUninit,   /* un-init */
     NULL,               /* module */
+    default_options
 };
 
 /*
@@ -870,7 +875,6 @@ xf86AiptekHIDOpen(InputInfoPtr pInfo)
     {
         common->deviceArray[i]->read_input = xf86AiptekHIDReadInput;
         common->deviceArray[i]->fd = pInfo->fd;
-        common->deviceArray[i]->flags |= XI86_CONFIGURED;
     }
     common->open = xf86AiptekHIDOpen;
 
@@ -1329,7 +1333,8 @@ xf86AiptekOpenDevice(DeviceIntPtr pDriver)
                device->xBottom - device->xTop,      /* max value */
                LPI2CPM(375),                        /* resolution */
                LPI2CPM(375),                        /* min_resolution */
-               LPI2CPM(375));                       /* max_resolution */
+               LPI2CPM(375),                        /* max_resolution */
+               Absolute);
 
     InitValuatorAxisStruct(pDriver,                 /* Y Resolution */
                1,                                   /* axis_id */
@@ -1338,7 +1343,8 @@ xf86AiptekOpenDevice(DeviceIntPtr pDriver)
                device->yBottom - device->yTop,      /* max value */
                LPI2CPM(375),                        /* resolution */
                LPI2CPM(375),                        /* min_resolution */
-               LPI2CPM(375));                       /* max_resolution */
+               LPI2CPM(375),                        /* max_resolution */
+               Absolute);
 
     InitValuatorAxisStruct(pDriver,                 /* Pressure */
                2,                                   /* axis_id */
@@ -1347,7 +1353,8 @@ xf86AiptekOpenDevice(DeviceIntPtr pDriver)
                511,                                 /* max value */
                512,                                 /* resolution */
                512,                                 /* min_resolution */
-               512);                                /* max_resolution */
+               512,                                 /* max_resolution */
+               Absolute);
 
     InitValuatorAxisStruct(pDriver,                 /* xTilt */
                3,                                   /* axis id */
@@ -1356,7 +1363,8 @@ xf86AiptekOpenDevice(DeviceIntPtr pDriver)
                127,                                 /* max value */
                256,                                 /* resolution */
                256,                                 /* min_resolution */
-               256);                                /* max_resolution */
+               256,                                 /* max_resolution */
+               Absolute);
 
     InitValuatorAxisStruct(pDriver,                 /* yTilt */
                4,                                   /* axis_id */
@@ -1365,7 +1373,8 @@ xf86AiptekOpenDevice(DeviceIntPtr pDriver)
                127,                                 /* max value */
                256,                                 /* resolution */
                256,                                 /* min_resolution */
-               256);                                /* max_resolution */
+               256,                                 /* max_resolution */
+               Absolute);
 
     /*
      * The sixth axis would be for wheel support. We do not have
@@ -1600,14 +1609,14 @@ xf86AiptekSwitchMode(ClientPtr client, DeviceIntPtr dev, int mode)
 }
 
 /*
- * xf86AiptekAllocate
- * Allocates the device structures for the Aiptek.
+ * xf86AiptekInitialize
+ * Initializes the device structures for the Aiptek.
  */
-static InputInfoPtr
-xf86AiptekAllocate(char* name,
-                int   flag)
+static int
+xf86AiptekAllocate(InputInfoPtr pInfo,
+                   char* name,
+                   int   flag)
 {
-    InputInfoPtr    pInfo;
     InputInfoPtr*   deviceArray;
     AiptekDevicePtr   device;
     AiptekCommonPtr   common;
@@ -1618,7 +1627,7 @@ xf86AiptekAllocate(char* name,
     if (!device)
     {
         DBG(3, "xf86AiptekAllocate failed to allocate 'device'\n");
-        return NULL;
+        return BadAlloc;
     }
 
     common = (AiptekCommonPtr) malloc(sizeof(AiptekCommonRec));
@@ -1626,7 +1635,7 @@ xf86AiptekAllocate(char* name,
     {
         DBG(3, "xf86AiptekAllocate failed to allocate 'common'\n");
         free(device);
-        return NULL;
+        return BadAlloc;
     }
 
     deviceArray = (InputInfoPtr*) malloc(sizeof(InputInfoPtr));
@@ -1635,33 +1644,17 @@ xf86AiptekAllocate(char* name,
         DBG(3, "xf86AiptekAllocate failed to allocate 'deviceArray'\n");
         free(device);
         free(common);
-        return NULL;
+        return BadAlloc;
     }
 
-
-    pInfo = xf86AllocateInput(aiptekDrv, 0);
-    if (!pInfo)
-    {
-        DBG(3, "xf86AiptekAllocate failed at xf86AllocateInput()\n");
-        free(device);
-        free(common);
-        free(deviceArray);
-        return NULL;
-    }
-
-    pInfo->name =                       name;
     pInfo->type_name =                  "Aiptek";
-    pInfo->flags =                      0;
     pInfo->device_control =             xf86AiptekProc;
     pInfo->read_input =                 xf86AiptekHIDReadInput;
     pInfo->control_proc =               xf86AiptekChangeControl;
     pInfo->switch_mode =                xf86AiptekSwitchMode;
 
     pInfo->fd =             VALUE_NA;
-    pInfo->atom =           0;
-    pInfo->dev =            NULL;
     pInfo->private =        device;
-    pInfo->private_flags =  0;
 
     device->flags =         flag;       /* various flags (device type, 
                                          * coordinate type */
@@ -1729,53 +1722,49 @@ xf86AiptekAllocate(char* name,
     common->zCapacity =     0;              /* tablet's max Z value */
     common->open =          xf86AiptekOpen; /* Open function */
 
-    return pInfo;
+    return Success;
 }
 
 /*
  * xf86AiptekAllocateStylus
  */
-static InputInfoPtr
-xf86AiptekAllocateStylus(void)
+static int
+xf86AiptekAllocateStylus(InputInfoPtr pInfo)
 {
-    InputInfoPtr pInfo = xf86AiptekAllocate(XI_STYLUS, STYLUS_ID);
-    
-    if (pInfo)
-    {
-        pInfo->type_name = "Stylus";
-    }
-    return pInfo;
+    int rc;
+
+    rc = xf86AiptekAllocate(pInfo, XI_STYLUS, STYLUS_ID);
+    pInfo->type_name = "Stylus";
+
+    return rc;
 }
 
 /*
  * xf86AiptekAllocateCursor
  */
-static InputInfoPtr
-xf86AiptekAllocateCursor(void)
+static int
+xf86AiptekAllocateCursor(InputInfoPtr pInfo)
 {
-    InputInfoPtr pInfo = xf86AiptekAllocate(XI_CURSOR, CURSOR_ID);
-    
-    if (pInfo)
-    {
-        pInfo->type_name = "Cursor";
-    }
-    return pInfo;
+    int rc;
+
+    rc = xf86AiptekAllocate(pInfo, XI_CURSOR, CURSOR_ID);
+    pInfo->type_name = "Cursor";
+
+    return rc;
 }
 
 /*
  * xf86AiptekAllocateEraser
  */
-static InputInfoPtr
-xf86AiptekAllocateEraser(void)
+static int
+xf86AiptekAllocateEraser(InputInfoPtr pInfo)
 {
-    InputInfoPtr pInfo = xf86AiptekAllocate(XI_ERASER,
-            ABSOLUTE_FLAG|ERASER_ID);
-    
-    if (pInfo)
-    {
-        pInfo->type_name = "Eraser";
-    }
-    return pInfo;
+    int rc;
+
+    rc = xf86AiptekAllocate(pInfo, XI_ERASER, ABSOLUTE_FLAG|ERASER_ID);
+    pInfo->type_name = "Eraser";
+
+    return rc;
 }
 
 /*
@@ -1809,72 +1798,49 @@ xf86AiptekUninit(InputDriverPtr    drv,
  *
  * Called when the module subsection is found in XF86Config
  */
-static InputInfoPtr
+static int
 xf86AiptekInit(InputDriverPtr    drv,
-               IDevPtr           dev,
+               InputInfoPtr      pInfo,
                int               flags)
 {
-    InputInfoPtr    pInfo     = NULL;
-    InputInfoPtr    fakepInfo = NULL;
     AiptekDevicePtr   device    = NULL;
     AiptekCommonPtr   common    = NULL;
     InputInfoPtr    pInfos;
     char*             s;
     int               shared;
+    int               rc;
 
     aiptekDrv = drv;
 
     xf86Msg(X_INFO, "xf86AiptekInit(): begins\n");
 
-    fakepInfo = (InputInfoPtr) calloc(1, sizeof(InputInfoRec));
-    if (!fakepInfo)
-    {
-        return NULL;
-    }
-
-    fakepInfo->conf_idev = dev;
-
-    /*
-     * fakepInfo is here so it can have default serial init values.
-     * Is this something to remove? TODO
-     */
-    xf86CollectInputOptions(fakepInfo, default_options, NULL);
-
 /* Type */
-    s = xf86FindOptionValue(fakepInfo->options, "Type");
+    s = xf86FindOptionValue(pInfo->options, "Type");
     if (s && (xf86NameCmp(s, "stylus") == 0))
     {
-        pInfo = xf86AiptekAllocateStylus();
+        rc = xf86AiptekAllocateStylus(pInfo);
     }
     else if (s && (xf86NameCmp(s, "cursor") == 0))
     {
-        pInfo = xf86AiptekAllocateCursor();
+        rc = xf86AiptekAllocateCursor(pInfo);
     }
     else if (s && (xf86NameCmp(s, "eraser") == 0))
     {
-        pInfo = xf86AiptekAllocateEraser();
+        rc = xf86AiptekAllocateEraser(pInfo);
     }
     else
     {
         xf86Msg(X_ERROR, "%s: No type or invalid type specified.\n"
                   "Must be one of 'stylus', 'cursor', or 'eraser'\n",
-                  dev->identifier);
+                  pInfo->name);
     }
 
-    if(!pInfo)
-    {
-        free(fakepInfo);
-        return NULL;
-    }
+    if(rc != Success)
+        return rc;
 
     device = (AiptekDevicePtr) pInfo->private;
 
     common              = device->common;
-
-    pInfo->options      = fakepInfo->options;
-    pInfo->conf_idev    = fakepInfo->conf_idev;
-    pInfo->name         = dev->identifier;
-    free(fakepInfo);
 
 /* Device */
 /* (mandatory) */
@@ -2236,11 +2202,7 @@ xf86AiptekInit(InputDriverPtr    drv,
     }
     xf86Msg(X_CONFIG, "%s: xf86AiptekInit() finished\n", pInfo->name);
 
-    /* Mark the device as configured */
-    pInfo->flags |= XI86_CONFIGURED;
-
-    /* return the pInfoDevice */
-    return (pInfo);
+    return Success;
 
 SetupProc_fail:
     if (common)
@@ -2249,7 +2211,7 @@ SetupProc_fail:
         free(device);
     if (pInfo)
         free(pInfo);
-    return NULL;
+    return BadValue;
 }
 
 /*
