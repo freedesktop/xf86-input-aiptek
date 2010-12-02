@@ -2406,11 +2406,7 @@ xf86AiptekInit(InputDriverPtr    drv,
                         dev->identifier);
                 break;
         }
-        if (xf86Verbose)
-        {
-            xf86Msg(X_CONFIG, "%s: BaudRate %u\n", dev->identifier,
-                    val);
-        }
+        xf86Msg(X_CONFIG, "%s: BaudRate %u\n", dev->identifier, val);
     }
     xf86Msg(X_CONFIG, "%s: xf86AiptekInit() finished\n", dev->identifier);
 

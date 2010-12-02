@@ -82,8 +82,6 @@
 #   include <xf86Module.h>
 #endif
 
-#define xf86Verbose 1
-
 #define CURSOR_SECTION_NAME "AiptekCursor"
 #define STYLUS_SECTION_NAME "AiptekStylus"
 #define ERASER_SECTION_NAME "AiptekEraser"
