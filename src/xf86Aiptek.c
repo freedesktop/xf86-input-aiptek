@@ -1796,33 +1796,6 @@ xf86AiptekAllocateEraser(void)
 }
 
 /*
- * Stylus device association
- */
-DeviceAssocRec aiptek_stylus_assoc =
-{
-    STYLUS_SECTION_NAME,        /* config_section_name */
-    xf86AiptekAllocateStylus    /* device_allocate */
-};
-
-/*
- * Cursor device association
- */
-DeviceAssocRec aiptek_cursor_assoc =
-{
-    CURSOR_SECTION_NAME,        /* config_section_name */
-    xf86AiptekAllocateCursor    /* device_allocate */
-};
-
-/*
- * Eraser device association
- */
-DeviceAssocRec aiptek_eraser_assoc =
-{
-    ERASER_SECTION_NAME,        /* config_section_name */
-    xf86AiptekAllocateEraser    /* device_allocate */
-};
-
-/*
  * xf86AiptekUninit --
  *
  * called when the driver is unloaded.
