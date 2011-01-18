@@ -1808,7 +1808,7 @@ xf86AiptekInit(InputDriverPtr    drv,
     InputInfoPtr    pInfos;
     char*             s;
     int               shared;
-    int               rc;
+    int               rc = BadValue;
 
     aiptekDrv = drv;
 
