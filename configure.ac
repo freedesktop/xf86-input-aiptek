@@ -50,7 +50,6 @@ AC_CHECK_LIB([m],[sqrt])
 AC_CHECK_HEADERS([linux/input.h])
 
 # Store the list of server defined extensions in REQUIRED_MODULES
-XORG_DRIVER_CHECK_EXT(RANDR, randrproto)
 XORG_DRIVER_CHECK_EXT(XINPUT, inputproto)
 
 # Obtain compiler/linker options from server and required extensions
