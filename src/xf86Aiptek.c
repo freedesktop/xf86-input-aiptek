@@ -1781,8 +1781,6 @@ xf86AiptekUninit(InputDriverPtr    drv,
 
     DBG(1, "xf86AiptekUninit\n");
 
-    xf86AiptekProc(pInfo->dev, DEVICE_OFF);
-
     if (device->common && device->common->xCapacity != -10101)
     {
         device->common->xCapacity = -10101;
