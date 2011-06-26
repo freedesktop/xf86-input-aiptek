@@ -1479,7 +1479,7 @@ xf86AiptekProc(DeviceIntPtr pAiptek, int requestCode)
                 xf86Msg(X_ERROR, "Unable to open aiptek device\n");
                 return !Success;
             }
-            xf86Msg(X_ERROR, "Able to open aiptek device\n");
+            xf86Msg(X_INFO, "Able to open aiptek device\n");
             xf86AddEnabledDevice(pInfo);
             pAiptek->public.on = TRUE;
         }
