@@ -1783,12 +1783,13 @@ xf86AiptekUninit(InputDriverPtr    drv,
 
     if (device)
     {
-        if (device->common && device->common->xCapacity != -10101)
+        if (device->common)
         {
-            device->common->xCapacity = -10101;
-            free(device->common);
+            device->common->numDevices--;
+            if (device->common->numDevices == 0)
+                free(device->common);
         }
-        free (device);
+        device->common = NULL;
     }
     pInfo->private = NULL;
     xf86DeleteInput(pInfo, 0);
