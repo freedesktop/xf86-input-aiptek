@@ -1785,9 +1785,21 @@ xf86AiptekUninit(InputDriverPtr    drv,
     {
         if (device->common)
         {
-            device->common->numDevices--;
-            if (device->common->numDevices == 0)
-                free(device->common);
+            AiptekCommonPtr common = device->common;
+            int i;
+
+            common->numDevices--;
+
+            for (i = 0; i < common->numDevices; i++)
+            {
+                if (common->deviceArray[i] == pInfo)
+                    memmove(&common->deviceArray[i],
+                            &common->deviceArray[i+1],
+                            (common->numDevices - i) * sizeof(InputInfoPtr));
+            }
+
+            if (common->numDevices == 0)
+                free(common);
         }
         device->common = NULL;
     }
