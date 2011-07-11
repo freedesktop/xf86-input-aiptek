@@ -1829,7 +1829,7 @@ xf86AiptekInit(InputDriverPtr    drv,
     xf86Msg(X_INFO, "xf86AiptekInit(): begins\n");
 
 /* Type */
-    s = xf86FindOptionValue(pInfo->options, "Type");
+    s = xf86SetStrOption(pInfo->options, "Type", NULL);
     if (s && (xf86NameCmp(s, "stylus") == 0))
     {
         rc = xf86AiptekAllocateStylus(pInfo);
