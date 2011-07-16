@@ -1507,7 +1507,7 @@ xf86AiptekProc(DeviceIntPtr pAiptek, int requestCode)
         default:
         {
             xf86Msg(X_ERROR, "xf86AiptekProc - Unsupported mode=%d\n", requestCode);
-            return !Success;
+            return BadValue;
         }
         break;
     }
