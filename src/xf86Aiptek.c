@@ -1916,7 +1916,8 @@ xf86AiptekInit(InputDriverPtr    drv,
      */
     if ( shared == 0)
     {
-        xf86AiptekHIDOpen(pInfo);
+        if (xf86AiptekHIDOpen(pInfo) != Success)
+            goto SetupProc_fail;
         close(pInfo->fd);
         pInfo->fd=-1;
     }
