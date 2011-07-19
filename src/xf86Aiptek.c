@@ -926,6 +926,7 @@ xf86AiptekHIDOpen(InputInfoPtr pInfo)
     {
         xf86Msg(X_ERROR, "xf86AiptekHIDOpen ERROR: %d\n", err);
         SYSCALL(close(pInfo->fd));
+        pInfo->fd = -1;
         return !Success;
     }
 
