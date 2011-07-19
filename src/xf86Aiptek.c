@@ -2220,12 +2220,6 @@ xf86AiptekInit(InputDriverPtr    drv,
     return Success;
 
 SetupProc_fail:
-    if (common)
-        free(common);
-    if (device)
-        free(device);
-    if (pInfo)
-        free(pInfo);
     return BadValue;
 }
 
