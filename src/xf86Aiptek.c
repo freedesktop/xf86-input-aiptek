@@ -293,13 +293,19 @@ xf86AiptekSendEvents(InputInfoPtr pInfo, int r_z)
                  */
 
                 /* Keyboard 'make' (press) event */
-                xf86PostKeyEvent(pInfo->dev, i+8, TRUE,
-                                 bAbsolute, 0, 5,
-                                 x, y, common->currentValues.button, xTilt, yTilt);
+                xf86PostKeyEvent(pInfo->dev, i+8, TRUE
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 22
+                                 , bAbsolute, 0, 5,
+                                 x, y, common->currentValues.button, xTilt, yTilt
+#endif
+                );
                 /* Keyboard 'break' (depress) event */
-                xf86PostKeyEvent(pInfo->dev, i+8, FALSE,
-                                 bAbsolute, 0, 5,
-                                 x, y, common->currentValues.button, xTilt, yTilt);
+                xf86PostKeyEvent(pInfo->dev, i+8, FALSE
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 22
+                                 , bAbsolute, 0, 5,
+                                 x, y, common->currentValues.button, xTilt, yTilt
+#endif
+                );
                 break;
             }
         }
